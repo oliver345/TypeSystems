@@ -13,12 +13,31 @@ public class Application implements Term {
 
     public Term apply() {
 
-        if (leftTerm instanceof S || leftTerm instanceof K) {
-            return this;
+        if (leftTerm instanceof S) {
+            if (rightTerm instanceof Application) {
+                return new Application(new S(), ((Application) rightTerm).apply());
+            }
+            else {
+                return this;
+            }
+        }
+
+        if (leftTerm instanceof K) {
+            if (rightTerm instanceof Application) {
+                return ((Application) rightTerm).getLeftTerm();
+            }
+            else {
+                return this;
+            }
         }
 
         if (leftTerm instanceof I) {
-            return rightTerm;
+            if (rightTerm instanceof Application) {
+                return ((Application) rightTerm).apply();
+            }
+            else {
+                return rightTerm;
+            }
         }
 
         if (leftTerm instanceof Var) {

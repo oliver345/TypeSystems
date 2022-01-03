@@ -14,7 +14,7 @@ public class SKI {
             return term;
         }
         else if (term instanceof Application) {
-            return ((Application) term).apply();
+            return resolveIApplications(((Application) term).apply());
         }
         throw new IllegalStateException();
     }
@@ -147,5 +147,23 @@ public class SKI {
             polishNotation.append(stack.pop());
         }
         stack.push('$');
+    }
+
+    private static Term resolveIApplications(Term term) {
+        if (term instanceof Application) {
+            if (((Application) term).getLeftTerm() instanceof I) {
+                return ((Application) term).getRightTerm();
+            }
+            else {
+                Term leftTerm = ((Application) term).getLeftTerm() instanceof Application ?
+                        resolveIApplications(((Application) term).getLeftTerm()) : ((Application) term).getLeftTerm();
+                Term rightTerm = ((Application) term).getRightTerm() instanceof Application ?
+                        resolveIApplications(((Application) term).getRightTerm()) : ((Application) term).getRightTerm();
+                return new Application(leftTerm, rightTerm);
+            }
+        }
+        else {
+            return term;
+        }
     }
 }

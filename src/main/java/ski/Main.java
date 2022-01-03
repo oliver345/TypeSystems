@@ -61,7 +61,12 @@ public class Main {
         // SIIb = SII(S(Ka)(SII)) -> bb => a(bb) => a(a(bb))
         System.out.println(SKI.eval(SKI.parseFromString("SII(S(Ka)(SII))")));
         /*System.out.println(SKI.eval(SKI.parseFromString("((I$((S$(K$a))$((S$I)$I)))$(I$((S$(K$a))$((S$I)$I))))")));
-        System.out.println(SKI.eval(SKI.parseFromString("(((S$(K$a))$((S$I)$I))$(I$((S$(K$a))$((S$I)$I))))")));*/
+        System.out.println(SKI.eval(SKI.parseFromString("(((S$(K$a))$((S$I)$I))$(I$((S$(K$a))$((S$I)$I))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(((K$a)$(I$((S$(K$a))$((S$I)$I))))$(((S$I)$I)$(I$((S$(K$a))$((S$I)$I)))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(a$(((S$I)$I)$(I$((S$(K$a))$((S$I)$I)))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(a$((I$(I$((S$(K$a))$((S$I)$I))))$(I$(I$((S$(K$a))$((S$I)$I))))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(a$((I$((S$(K$a))$((S$I)$I)))$(I$(I$((S$(K$a))$((S$I)$I))))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(a$(((S$(K$a))$((S$I)$I))$(I$(I$((S$(K$a))$((S$I)$I))))))"))); ==> (a$(((S$(K$a))$((S$I)$I))$(I$(I$((S$(K$a))$((S$I)$I)))))) */
 
         // S(K(SI))K
         // S(K(SI))Kab -> K(SI)a(Ka)b
