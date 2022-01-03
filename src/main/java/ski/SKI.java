@@ -19,6 +19,27 @@ public class SKI {
         throw new IllegalStateException();
     }
 
+    public static void evalUntilFinal(Term term) {
+        List<Term> terms = new ArrayList<>();
+        terms.add(term);
+        term = eval(term);
+
+        do {
+            terms.add(term);
+            term = eval(term);
+        } while (!term.toString().equals(terms.get(terms.size() - 1).toString()));
+
+        if (terms.size() > 1) {
+            for (int i = 1; i < terms.size(); i++) {
+                String stringBuilder = terms.get(i - 1) + " -> " + terms.get(i);
+                System.out.println(stringBuilder);
+            }
+        }
+        else {
+            System.out.println(terms.get(0));
+        }
+    }
+
     public static Term parseFromString(String expression) {
         if (containsValidCharacters(expression)) {
             if (areParenthesesValid(expression)) {
