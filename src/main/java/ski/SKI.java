@@ -1,14 +1,16 @@
 package ski;
 
-import org.apache.commons.lang3.tuple.Pair;
 import ski.term.*;
 
+import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Stack;
 
 public class SKI {
 
     public static Term eval(Term term) {
-        if (term instanceof S || term instanceof K || term instanceof I) {
+        if (term instanceof S || term instanceof K || term instanceof I || term instanceof Var) {
             return term;
         }
         else if (term instanceof Application) {
@@ -18,13 +20,17 @@ public class SKI {
     }
 
     public static Term parseFromString(String expression) {
-
-        if (areParenthesesValid(expression)) {
-            expression = cleanExpression(expression);
-            return buildTermFromExpression(expression);
+        if (containsValidCharacters(expression)) {
+            if (areParenthesesValid(expression)) {
+                expression = cleanExpression(expression);
+                return buildTermFromExpression(expression);
+            }
+            else {
+                throw new InputMismatchException("Input text contains invalid or empty parentheses");
+            }
         }
         else {
-            throw new InputMismatchException("Input text contains invalid or empty parentheses");
+            throw new InputMismatchException("Input text contains invalid characters");
         }
     }
 
@@ -54,73 +60,92 @@ public class SKI {
         return validParentheses;
     }
 
-    //Removes closing brackets, dollar signs and the unnecessary other brackets if exists
-    private static String cleanExpression(String expression) {
+    private static boolean containsValidCharacters(String expression) {
+        return expression.matches("[a-zA-Z()$]*");
+    }
 
+    //Removes dollar signs and the unnecessary brackets
+    private static String cleanExpression(String expression) {
         if (expression.charAt(0) == '(' && expression.charAt(expression.length() - 1) == ')'
                 && areParenthesesValid(expression.substring(1, expression.length() - 1))) {
             expression = expression.substring(1, expression.length() -1);
         }
 
-        expression = expression.replaceAll("\\((?=.\\))", "");
-
-        return expression.replaceAll("[$)]", "");
+        return expression.replaceAll("\\$", "");
     }
 
     private static Term buildTermFromExpression(String expression) {
+        String polishNotation = toPolishForm(expression);
+        List<Term> terms = new ArrayList<>();
+        terms.add(new Application(null, null));
 
-        //Initial term, will be removed at the end
-        Application syntaxTree = new Application(null, null);
-
-        while (!expression.isEmpty()) {
-
-            Pair<Term, String> termAndLeftover = readTerm(expression);
-            syntaxTree = new Application(syntaxTree, termAndLeftover.getLeft());
-            expression = termAndLeftover.getRight();
-        }
-
-        return removeInitialApplication(syntaxTree);
-    }
-
-    private static Term removeInitialApplication(Application syntaxTree) {
-
-        if (((Application) syntaxTree.getLeftTerm()).getLeftTerm() == null) {
-            return syntaxTree.getRightTerm();
-        }
-        else {
-            if (((Application) ((Application) syntaxTree.getLeftTerm()).getLeftTerm()).getLeftTerm() == null){
-                syntaxTree.setLeftTerm(((Application) syntaxTree.getLeftTerm()).getRightTerm());
+        int position = 0;
+        while (position < polishNotation.length()) {
+            if (polishNotation.charAt(position) == '$') {
+                Application application = new Application(terms.get(terms.size() - 2), terms.get(terms.size() -1));
+                terms = terms.subList(0, terms.size() - 2);
+                terms.add(application);
             }
             else {
-                Term leftTerm = syntaxTree.getLeftTerm();
-                syntaxTree.setLeftTerm(removeInitialApplication((Application) leftTerm));
+                terms.add(parseTermFromChar(polishNotation.charAt(position)));
             }
-            return syntaxTree;
+            ++position;
         }
+
+        terms.remove(0);
+        return terms.size() == 1 ? terms.get(0) : terms.stream().reduce(Application::new).orElseThrow();
     }
 
-    private static Pair<Term, String> readTerm(String expression) {
-
-        if (expression.startsWith("(")) {
-
-            Pair<Term, String> leftResult = readTerm(expression.substring(1));
-            Pair<Term, String> rightResult = readTerm(leftResult.getRight());
-            return Pair.of(new Application(leftResult.getLeft(), rightResult.getLeft()), rightResult.getRight());
-        }
-        else {
-            return Pair.of(parseTermFromChar(expression.charAt(0)), expression.substring(1));
-        }
-    }
-
-    private static Term parseTermFromChar(char letter) {
-        switch (letter) {
+    private static Term parseTermFromChar(char character) {
+        switch (character) {
             case 'S':
                 return new S();
             case 'K':
                 return new K();
             case 'I':
                 return new I();
+            default:
+                return new Var(character);
         }
-        throw new IllegalArgumentException();
+    }
+
+    private static String toPolishForm(String expression) {
+        Stack<Character> stack = new Stack<>();
+        StringBuilder polishNotation = new StringBuilder();
+        int position = 0;
+        while (position < expression.length()) {
+
+            char character = expression.charAt(position);
+            switch (character) {
+                case '(':
+                    if (position - 1 >= 0 && expression.charAt(position - 1) != '(') {
+                        addApplicationSymbol(stack, polishNotation);
+                    }
+                    stack.push(character);
+                    break;
+                case ')':
+                    while (!stack.peek().equals('(')) {
+                        polishNotation.append(stack.pop());
+                    }
+                    stack.pop();
+                    break;
+                default:
+                    if (position - 1 >= 0 && expression.charAt(position - 1) != '(') {
+                        addApplicationSymbol(stack, polishNotation);
+                    }
+                    polishNotation.append(character);
+                    break;
+            }
+            ++position;
+        }
+
+        return polishNotation.toString();
+    }
+
+    private static void addApplicationSymbol(Stack<Character> stack, StringBuilder polishNotation) {
+        while (!stack.isEmpty() && !stack.peek().equals('(')) {
+            polishNotation.append(stack.pop());
+        }
+        stack.push('$');
     }
 }

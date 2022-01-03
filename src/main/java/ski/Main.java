@@ -1,71 +1,143 @@
 package ski;
 
-import ski.term.*;
-
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println(SKI.eval(new S()));
-        System.out.println(SKI.eval(new K()));
-        System.out.println(SKI.eval(new I()));
-
-        Application expression = new Application(new Application(new Application(new S(), new K()), new S()), new K());
-        Term result = SKI.eval(expression);
-        System.out.println(result);
-
-        expression = new Application(new Application(new K(), new K()), new Application(new S(), new K()));
-        System.out.println(SKI.eval(expression));
-
-        //Boolean - NOT
-        //not True = False = SK
-        expression = new Application(new Application(new K(), new Application(new S(), new K())), new K());
-        System.out.println(SKI.eval(expression));
-
-        //not False = True = K
-        expression = new Application(new Application(new Application(new S(), new K()), new Application(new S(), new K())), new K());
-        System.out.println(SKI.eval(expression));
-        expression = new Application(new Application(new K(), new K()), new Application(new Application(new S(), new K()), new K()));
-        System.out.println(SKI.eval(expression));
-
-        //----------------------------------------------------------
-
-        System.out.println("---------------------------");
-        /*SKI.parseFromString("((K$K)$(S$K))");
-        SKI.parseFromString("((K$K)$((S$K)$K))");
-
-        SKI.parseFromString("KK(SK)");
-        SKI.parseFromString("KK((SK)K)");*/
-        System.out.println("---------------------------");
-        //System.out.println(SKI.parseFromString("S((KI)S)"));
-        //System.out.println(SKI.parseFromString("S$((K$I)$S)"));
-
-        //S-nek egy parametere van, megall a vegrehajtas
-        System.out.println(SKI.eval(SKI.parseFromString("S((KI)S)")));
-
-
-        System.out.println(SKI.eval(SKI.parseFromString("SK(SK)K")));
-        //((K$K)$((S$K)$K))
-        System.out.println(SKI.eval(SKI.parseFromString("((K$K)$((S$K)$K))")));
-        //K
+        // S -> S
+        System.out.println(SKI.eval(SKI.parseFromString("S")));
+        // K -> K
         System.out.println(SKI.eval(SKI.parseFromString("K")));
-        //K
+        // I -> I
+        System.out.println(SKI.eval(SKI.parseFromString("I")));
+        // x -> x
+        System.out.println(SKI.eval(SKI.parseFromString("x")));
 
-        //(F)(T)AND = F(T)(F) = F
+        // Ix -> x
+        System.out.println(SKI.eval(SKI.parseFromString("Ix")));
+
+        // Kxy -> x
+        System.out.println(SKI.eval(SKI.parseFromString("Kxy")));
+
+        // Sxyz -> xz(yz)
+        System.out.println(SKI.eval(SKI.parseFromString("Sxyz")));
+
+        // SKSK -> KK(SK)
+        System.out.println(SKI.eval(SKI.parseFromString("SKSK")));
+        // ((K$K)$(S$K)) -> K
+        System.out.println(SKI.eval(SKI.parseFromString("((K$K)$(S$K))")));
+
+        // SKxy -> Ky(xy)
+        System.out.println(SKI.eval(SKI.parseFromString("SKxy")));
+        // ((K$y)$(x$y)) -> y
+        System.out.println(SKI.eval(SKI.parseFromString("((K$y)$(x$y))")));
+
+        // SIIa -> Ia(Ia)
+        System.out.println(SKI.eval(SKI.parseFromString("SIIa")));
+        // ((I$a)$(I$a)) -> a(Ia)
+        System.out.println(SKI.eval(SKI.parseFromString("((I$a)$(I$a))")));
+        // (a$(I$a)) -> aa
+        System.out.println(SKI.eval(SKI.parseFromString("(a$(I$a))")));
+
+        // SII(SII) -> I(SII)(I(SII))
+        System.out.println(SKI.eval(SKI.parseFromString("SII(SII)")));
+        // ((I$((S$I)$I))$(I$((S$I)$I))) -> (SII)(I(SII))
+        System.out.println(SKI.eval(SKI.parseFromString("((I$((S$I)$I))$(I$((S$I)$I)))")));
+        // (((S$I)$I)$(I$((S$I)$I))) -> ((I$(I$((S$I)$I)))$(I$(I$((S$I)$I))))
+        /*System.out.println(SKI.eval(SKI.parseFromString("(((S$I)$I)$(I$((S$I)$I)))")));
+        System.out.println(SKI.eval(SKI.parseFromString("((I$(I$((S$I)$I)))$(I$(I$((S$I)$I))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("((I$((S$I)$I))$(I$(I$((S$I)$I))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(((S$I)$I)$(I$(I$((S$I)$I))))")));*/
+
+        // (S(Ka)(SII))b -> Kab(SIIb)
+        System.out.println(SKI.eval(SKI.parseFromString("(S(Ka)(SII))b")));
+        // (((K$a)$b)$(((S$I)$I)$b)) -> a(SIIb)
+        System.out.println(SKI.eval(SKI.parseFromString("(((K$a)$b)$(((S$I)$I)$b))")));
+        // (a$(((S$I)$I)$b)) -> a(bb)
+        System.out.println(SKI.eval(SKI.parseFromString("(a$(((S$I)$I)$b))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(a$((I$b)$(I$b)))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(a$(b$(I$b)))")));
+
+        // b = s(Ka)(SII)
+        // SIIb = SII(S(Ka)(SII)) -> bb => a(bb) => a(a(bb))
+        System.out.println(SKI.eval(SKI.parseFromString("SII(S(Ka)(SII))")));
+        /*System.out.println(SKI.eval(SKI.parseFromString("((I$((S$(K$a))$((S$I)$I)))$(I$((S$(K$a))$((S$I)$I))))")));
+        System.out.println(SKI.eval(SKI.parseFromString("(((S$(K$a))$((S$I)$I))$(I$((S$(K$a))$((S$I)$I))))")));*/
+
+        // S(K(SI))K
+        // S(K(SI))Kab -> K(SI)a(Ka)b
+        System.out.println(SKI.eval(SKI.parseFromString("S(K(SI))Kab")));
+        // ((((K$(S$I))$a)$(K$a))$b) -> SI(Ka)b
+        System.out.println(SKI.eval(SKI.parseFromString("((((K$(S$I))$a)$(K$a))$b)")));
+        // (((S$I)$(K$a))$b) -> Ib(Kab)
+        System.out.println(SKI.eval(SKI.parseFromString("(((S$I)$(K$a))$b)")));
+        // ((I$b)$((K$a)$b)) -> b(Kab)
+        System.out.println(SKI.eval(SKI.parseFromString("((I$b)$((K$a)$b))")));
+        // (b$((K$a)$b)) -> ba
+        System.out.println(SKI.eval(SKI.parseFromString("(b$((K$a)$b))")));
+
+        /*
+        Boolean
+        T = K, Kxy = x
+        F = SK, SKxy = Ky(xy) = y
+         */
+        System.out.println(SKI.eval(SKI.parseFromString("Kxy")));
+
+        System.out.println(SKI.eval(SKI.parseFromString("SKxy")));
+        System.out.println(SKI.eval(SKI.parseFromString("((K$y)$(x$y))")));
+
+        // NOT = (F)(T) = (SK)(K)
+
+        // (T)NOT = K(SK)(K) -> SK = F
+        System.out.println(SKI.eval(SKI.parseFromString("K(SK)(K)")));
+        // (F)NOT = SK(SK)(K) -> KK((SK)k)
+        System.out.println(SKI.eval(SKI.parseFromString("SK(SK)(K)")));
+        // ((K$K)$((S$K)$K)) -> K
+        System.out.println(SKI.eval(SKI.parseFromString("((K$K)$((S$K)$K))")));
+
+        // OR = T = K
+
+        // T OR T = KKK -> K = T
+        System.out.println(SKI.eval(SKI.parseFromString("KKK")));
+
+        // T OR F = KK(SK) -> K = T
+        System.out.println(SKI.eval(SKI.parseFromString("KK(SK)")));
+
+        // F OR T = (SK)KK -> K = T
+        System.out.println(SKI.eval(SKI.parseFromString("(SK)KK")));
+        System.out.println(SKI.eval(SKI.parseFromString("((K$K)$(K$K))")));
+
+        // F OR F = (SK)K(SK) -> SK = F
         System.out.println(SKI.eval(SKI.parseFromString("(SK)K(SK)")));
-        //((K$(S$K))$(K$(S$K)))
         System.out.println(SKI.eval(SKI.parseFromString("((K$(S$K))$(K$(S$K)))")));
-        //(S$K) ==> SK ==> F
 
-        //(T)(T)AND = T(T)(F) = T
-        System.out.println(SKI.eval(SKI.parseFromString("K(K)(SK")));
+        // AND = F = SK
 
-        System.out.println("SI(SK) -> " + SKI.eval(SKI.parseFromString("SI(SK)")));
-        System.out.println("SI(SK)I -> " + SKI.eval(SKI.parseFromString("SI(SK)I")));
-        System.out.println("Expressions");
-        System.out.println(SKI.eval(SKI.parseFromString("SIIS")));
-        System.out.println(SKI.eval(SKI.parseFromString("((I$S)$(I$S))")));
-        System.out.println(SKI.eval(SKI.parseFromString("(S$(I$S))")));
+        // T T AND = KK(SK) -> K = T
+        System.out.println(SKI.eval(SKI.parseFromString("KK(SK)")));
 
+        // T F AND = K(SK)(SK) -> SK = F
+        System.out.println(SKI.eval(SKI.parseFromString("K(SK)(SK)")));
 
+        // F T AND = (SK)K(SK) -> SK = F
+        System.out.println(SKI.eval(SKI.parseFromString("(SK)K(SK)")));
+        System.out.println(SKI.eval(SKI.parseFromString("((K$(S$K))$(K$(S$K)))")));
+
+        // F F AND = (SK)(SK)(SK) -> SK = F
+        System.out.println(SKI.eval(SKI.parseFromString("(SK)(SK)(SK)")));
+        System.out.println(SKI.eval(SKI.parseFromString("((K$(S$K))$((S$K)$(S$K)))")));
+
+        // Examples of reduction
+        // SKI(KIS) => ... => I
+        System.out.println(SKI.eval(SKI.parseFromString("SKI(KIS)")));
+        System.out.println(SKI.eval(SKI.parseFromString("((K$((K$I)$S))$(I$((K$I)$S)))")));
+        System.out.println(SKI.eval(SKI.parseFromString("((K$I)$S)")));
+
+        // KS(I(SKSI)) => .. => S
+        System.out.println(SKI.eval(SKI.parseFromString("KS(I(SKSI))")));
+
+        // SKIK -> KK(IK)
+        System.out.println(SKI.eval(SKI.parseFromString("SKIK")));
+        // ((K$K)$(I$K)) -> K
+        System.out.println(SKI.eval(SKI.parseFromString("((K$K)$(I$K))")));
     }
 }
