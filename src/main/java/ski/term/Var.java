@@ -8,6 +8,10 @@ public class Var implements Term {
         this.name = name;
     }
 
+    public char getName() {
+        return name;
+    }
+
     @Override
     public String toString() {
         return String.valueOf(name);

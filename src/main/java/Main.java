@@ -151,9 +151,18 @@ public class Main {
 
         //SKI.evalUntilFinal(SKI.parseFromString("(S(K(SI))(S(KK)I)xy)"));
 
+        System.out.println("*** Lambda ***");
         System.out.println(Lambda.eval(new Var('x')));
         System.out.println(Lambda.eval(new Bound(new Var('x'), new Application(new Var('y'), new Var('x')))));
         System.out.println(Lambda.eval(new Bound(new Var('x'), new Bound(new Var('y'), new Application(new Var('y'), new Var('x'))))));
+
+        System.out.println(Lambda.fromSKI(SKI.parseFromString("x")));
+        System.out.println(Lambda.fromSKI(SKI.parseFromString("S")));
+        System.out.println(Lambda.fromSKI(SKI.parseFromString("K")));
+        System.out.println(Lambda.fromSKI(SKI.parseFromString("I")));
+        System.out.println(Lambda.fromSKI(SKI.parseFromString("zI")));
+
+        System.out.println(SKI.fromLambda(new Bound(new Var('x'), new Var('x'))));
     }
 
     /*
@@ -167,5 +176,4 @@ public class Main {
 
     https://en.wikipedia.org/wiki/SKI_combinator_calculus
      */
-
 }

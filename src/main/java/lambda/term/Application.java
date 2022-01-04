@@ -25,6 +25,6 @@ public class Application implements Term {
 
     @Override
     public String toString() {
-        return leftTerm + ":" + rightTerm;
+        return "(" + leftTerm + ":" + rightTerm + ")";
     }
 }

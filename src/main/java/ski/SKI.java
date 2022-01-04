@@ -1,5 +1,6 @@
 package ski;
 
+import lambda.term.Bound;
 import ski.term.*;
 
 import java.util.ArrayList;
@@ -53,6 +54,31 @@ public class SKI {
         else {
             throw new InputMismatchException("Input text contains invalid characters");
         }
+    }
+
+    public static Term fromLambda(lambda.term.Term lambda) {
+        if (lambda instanceof lambda.term.Var) {
+            return new Var(((lambda.term.Var) lambda).getName());
+        }
+
+        if (lambda instanceof lambda.term.Application) {
+            return new Application(fromLambda(((lambda.term.Application) lambda).getLeftTerm()), fromLambda(((lambda.term.Application) lambda).getRightTerm()));
+        }
+
+        if (lambda instanceof Bound) {
+            if (((Bound) lambda).getTerm() instanceof lambda.term.Var) {
+                if (((Bound) lambda).getVar().getName() == ((lambda.term.Var) ((Bound) lambda).getTerm()).getName()) {
+                    return new I();
+                }
+            }
+
+            if (((Bound) lambda).getTerm() instanceof lambda.term.Application) {
+                lambda.term.Var varX = new lambda.term.Var('x');
+                return new Application(new Application(new S(), fromLambda(new Bound(varX, ((lambda.term.Application) ((Bound) lambda).getTerm()).getLeftTerm()))),
+                        fromLambda(new Bound(varX, ((lambda.term.Application) ((Bound) lambda).getTerm()).getRightTerm())));
+            }
+        }
+        throw new IllegalStateException();
     }
 
     private static boolean areParenthesesValid(String expression) {

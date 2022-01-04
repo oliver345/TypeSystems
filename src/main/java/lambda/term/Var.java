@@ -2,7 +2,7 @@ package lambda.term;
 
 public class Var implements Term {
 
-    private final Bound bound;
+    private Bound bound;
 
     private final char name;
 
@@ -17,6 +17,10 @@ public class Var implements Term {
 
     public Bound getBound() {
         return bound;
+    }
+
+    public void setBound(Bound bound) {
+        this.bound = bound;
     }
 
     public char getName() {
