@@ -1,4 +1,8 @@
-package ski;
+import lambda.Lambda;
+import lambda.term.Application;
+import lambda.term.Bound;
+import lambda.term.Var;
+import ski.SKI;
 
 public class Main {
     public static void main(String[] args) {
@@ -144,5 +148,24 @@ public class Main {
         System.out.println(SKI.eval(SKI.parseFromString("SKIK")));
         // ((K$K)$(I$K)) -> K
         System.out.println(SKI.eval(SKI.parseFromString("((K$K)$(I$K))")));
+
+        //SKI.evalUntilFinal(SKI.parseFromString("(S(K(SI))(S(KK)I)xy)"));
+
+        System.out.println(Lambda.eval(new Var('x')));
+        System.out.println(Lambda.eval(new Bound(new Var('x'), new Application(new Var('y'), new Var('x')))));
+        System.out.println(Lambda.eval(new Bound(new Var('x'), new Bound(new Var('y'), new Application(new Var('y'), new Var('x'))))));
     }
+
+    /*
+    Completeness of the S-K basis
+    Conversion of a lambda term to an equivalent combinatorial term
+    https://en.wikipedia.org/wiki/Combinatory_logic#Completeness_of_the_S-K_basis
+
+    https://github.com/ngzhian/ski/blob/master/ski.ml
+
+    https://en-academic.com/dic.nsf/enwiki/617276
+
+    https://en.wikipedia.org/wiki/SKI_combinator_calculus
+     */
+
 }
