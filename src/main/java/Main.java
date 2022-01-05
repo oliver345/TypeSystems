@@ -163,7 +163,15 @@ public class Main {
         System.out.println(Lambda.fromSKI(SKI.parseFromString("zI")));
 
         System.out.println(SKI.fromLambda(new Bound(new Var('x'), new Var('x'))));
+
+        System.out.println(SKI.eval(SKI.parseFromString("SII(SII)")));
     }
+
+    // ski , lambada reprezentácio, konvertálás, összehasonlítás, ugyan az a kif. melyikben gyorsabb,,,,  tipusos (egyszeru
+    // tipusokkal)
+    // ski
+    // és
+    // konvertálása sima ski-be
 
     /*
     Completeness of the S-K basis

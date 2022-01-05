@@ -15,7 +15,8 @@ public class SKI {
             return term;
         }
         else if (term instanceof Application) {
-            return resolveIApplications(((Application) term).apply());
+            //return resolveIApplications(((Application) term).apply());
+            return ((Application) term).apply();
         }
         throw new IllegalStateException();
     }

@@ -2,6 +2,7 @@ package lambda.term;
 
 public class Var implements Term {
 
+    //Lam binder
     private Bound bound;
 
     private final char name;

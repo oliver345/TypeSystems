@@ -56,6 +56,7 @@ public class Application implements Term {
                 return this;
             }
 
+            //--
             if (subApplication.getLeftTerm() instanceof I) {
                 return new Application(subApplication.getRightTerm(), rightTerm);
             }
