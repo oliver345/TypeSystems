@@ -1,12 +1,12 @@
 package lambda.term;
 
-public class Bound implements Term {
+public class Lam implements Term {
 
     private final Var var;
 
     private final Term term;
 
-    public Bound(Var var, Term term) {
+    public Lam(Var var, Term term) {
         this.var = var;
         this.term = term;
     }

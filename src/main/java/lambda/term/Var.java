@@ -2,8 +2,8 @@ package lambda.term;
 
 public class Var implements Term {
 
-    //Lam binder
-    private Bound bound;
+    //Todo: remove
+    private Lam binder;
 
     private final char name;
 
@@ -11,17 +11,17 @@ public class Var implements Term {
         this(null, name);
     }
 
-    public Var(Bound bound, char name) {
-        this.bound = bound;
+    public Var(Lam binder, char name) {
+        this.binder = binder;
         this.name = name;
     }
 
-    public Bound getBound() {
-        return bound;
+    public Lam getBinder() {
+        return binder;
     }
 
-    public void setBound(Bound bound) {
-        this.bound = bound;
+    public void setBinder(Lam binder) {
+        this.binder = binder;
     }
 
     public char getName() {

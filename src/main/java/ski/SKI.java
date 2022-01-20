@@ -1,6 +1,6 @@
 package ski;
 
-import lambda.term.Bound;
+import lambda.term.Lam;
 import ski.term.*;
 
 import java.util.ArrayList;
@@ -15,31 +15,9 @@ public class SKI {
             return term;
         }
         else if (term instanceof Application) {
-            //return resolveIApplications(((Application) term).apply());
-            return ((Application) term).apply();
+            return new Application(eval(((Application) term).getLeftTerm()), eval(((Application) term).getRightTerm())).apply();
         }
         throw new IllegalStateException();
-    }
-
-    public static void evalUntilFinal(Term term) {
-        List<Term> terms = new ArrayList<>();
-        terms.add(term);
-        term = eval(term);
-
-        do {
-            terms.add(term);
-            term = eval(term);
-        } while (!term.toString().equals(terms.get(terms.size() - 1).toString()));
-
-        if (terms.size() > 1) {
-            for (int i = 1; i < terms.size(); i++) {
-                String stringBuilder = terms.get(i - 1) + " -> " + terms.get(i);
-                System.out.println(stringBuilder);
-            }
-        }
-        else {
-            System.out.println(terms.get(0));
-        }
     }
 
     public static Term parseFromString(String expression) {
@@ -66,18 +44,34 @@ public class SKI {
             return new Application(fromLambda(((lambda.term.Application) lambda).getLeftTerm()), fromLambda(((lambda.term.Application) lambda).getRightTerm()));
         }
 
-        if (lambda instanceof Bound) {
-            if (((Bound) lambda).getTerm() instanceof lambda.term.Var) {
-                if (((Bound) lambda).getVar().getName() == ((lambda.term.Var) ((Bound) lambda).getTerm()).getName()) {
-                    return new I();
-                }
-            }
+        if (lambda instanceof Lam) {
+            return convertLambda(((Lam) lambda).getVar(), fromLambda(((Lam) lambda).getTerm()));
+        }
+        throw new IllegalStateException();
+    }
 
-            if (((Bound) lambda).getTerm() instanceof lambda.term.Application) {
-                lambda.term.Var varX = new lambda.term.Var('x');
-                return new Application(new Application(new S(), fromLambda(new Bound(varX, ((lambda.term.Application) ((Bound) lambda).getTerm()).getLeftTerm()))),
-                        fromLambda(new Bound(varX, ((lambda.term.Application) ((Bound) lambda).getTerm()).getRightTerm())));
+    private static Term convertLambda(lambda.term.Var var, Term term) {
+        if (term instanceof Var) {
+            if (var.getName() == ((Var) term).getName()) {
+                return new I();
             }
+            else {
+                return new Application(new K(), term);
+            }
+        }
+
+        if (term instanceof S || term instanceof K) {
+            return new Application(new K(), term);
+        }
+
+        if (term instanceof Application) {
+            return new Application(new Application(new S(), convertLambda(var, ((Application) term).getLeftTerm())),
+                    convertLambda(var, ((Application) term).getRightTerm()));
+        }
+
+        //Todo: check
+        if (term instanceof I) {
+            return new I();
         }
         throw new IllegalStateException();
     }
@@ -195,23 +189,5 @@ public class SKI {
             polishNotation.append(stack.pop());
         }
         stack.push('$');
-    }
-
-    private static Term resolveIApplications(Term term) {
-        if (term instanceof Application) {
-            if (((Application) term).getLeftTerm() instanceof I) {
-                return ((Application) term).getRightTerm();
-            }
-            else {
-                Term leftTerm = ((Application) term).getLeftTerm() instanceof Application ?
-                        resolveIApplications(((Application) term).getLeftTerm()) : ((Application) term).getLeftTerm();
-                Term rightTerm = ((Application) term).getRightTerm() instanceof Application ?
-                        resolveIApplications(((Application) term).getRightTerm()) : ((Application) term).getRightTerm();
-                return new Application(leftTerm, rightTerm);
-            }
-        }
-        else {
-            return term;
-        }
     }
 }

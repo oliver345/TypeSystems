@@ -1,5 +1,7 @@
 package lambda.term;
 
+import lambda.Lambda;
+
 public class Application implements Term {
 
     private final Term leftTerm;
@@ -12,7 +14,12 @@ public class Application implements Term {
     }
 
     public Term apply() {
-        return this;
+        if (leftTerm instanceof Lam) {
+            return Lambda.substitute(((Lam) leftTerm).getTerm(), ((Lam) leftTerm).getVar(), rightTerm);
+        }
+        else {
+            return this;
+        }
     }
 
     public Term getLeftTerm() {
