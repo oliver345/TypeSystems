@@ -69,9 +69,8 @@ public class SKI {
                     convertLambda(var, ((Application) term).getRightTerm()));
         }
 
-        //Todo: check
         if (term instanceof I) {
-            return new I();
+            return new Application(new K(), new I());
         }
         throw new IllegalStateException();
     }
