@@ -27,6 +27,8 @@ public class Lambda {
         AVAILABLE_CHARACTERS.addAll(ALL_CHARACTERS);
     }
 
+    //add advanced eval: Kovács ANdrás github, 01eval
+    //eval until
     public static Term eval(Term term) {
         if (term instanceof Var) {
             return term;
@@ -102,8 +104,9 @@ public class Lambda {
         }
 
         if (term instanceof Lam) {
-            return new Lam(new Var(findUniqueVariableName()), substitute(((Lam) renameVariable(term, ((Lam) term).getVar(),
-                    new Var(findUniqueVariableName()))).getTerm(), oldVar, newTerm));
+            Var newVar = new Var(findUniqueVariableName());
+            return new Lam(newVar,
+                    substitute(renameVariable(((Lam) term).getTerm(), ((Lam) term).getVar(), newVar), oldVar, newTerm));
         }
 
         if (term instanceof Application) {

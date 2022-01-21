@@ -114,6 +114,7 @@ public class Main {
         System.out.println(Lambda.eval(new Lam(new Var('x'), new Application(new Var('y'), new Var('x')))));
         System.out.println(Lambda.eval(new Lam(new Var('x'), new Lam(new Var('y'), new Application(new Var('y'), new Var('x'))))));
 
+        System.out.println("FromSKI");
         System.out.println(Lambda.fromSKI(SKI.parseFromString("x")));
         System.out.println(Lambda.fromSKI(SKI.parseFromString("S")));
         System.out.println(Lambda.fromSKI(SKI.parseFromString("K")));
@@ -143,6 +144,10 @@ public class Main {
         Term ttt = Lambda.fromSKI(SKI.parseFromString("(((S$I)$I)$I)"));
         System.out.println(ttt);
         System.out.println(Lambda.evalExpression(ttt));
+
+        System.out.println(SKI.eval(SKI.parseFromString("((S$I)$I)$I$t")));
+        System.out.println(Lambda.evalExpression(new Application(ttt, new Var('t'))));
+        System.out.println(Lambda.evalExpression(Lambda.eval(new Application(ttt, new Var('t')))));
 
 
         // (SK)(SK)(SK) => SK
