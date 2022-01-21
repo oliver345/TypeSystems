@@ -170,7 +170,9 @@ public class Lambda {
 
     private static char findUniqueVariableName() {
 
-        //Todo: ADD EXCEPTION!
-        return AVAILABLE_CHARACTERS.get(0);
+        if (AVAILABLE_CHARACTERS.size() > 0) {
+            return AVAILABLE_CHARACTERS.remove(0);
+        }
+        throw new IllegalStateException("Application ran out of free Var names");
     }
 }

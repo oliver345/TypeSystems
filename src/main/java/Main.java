@@ -141,27 +141,58 @@ public class Main {
 
         // (Lx.(x:(Lx.x))):Lx.x
         System.out.println(SKI.fromLambda(new Application(new Lam(new Var('x'), new Application(new Var('x'), new Lam(new Var('x'), new Var('x')))), new Lam(new Var('x'), new Var('x')))));
-        Term ttt = Lambda.fromSKI(SKI.parseFromString("(((S$I)$I)$I)"));
-        System.out.println(ttt);
-        System.out.println(Lambda.evalExpression(ttt));
 
-        System.out.println(SKI.eval(SKI.parseFromString("((S$I)$I)$I$t")));
-        System.out.println(Lambda.evalExpression(new Application(ttt, new Var('t'))));
-        System.out.println(Lambda.evalExpression(Lambda.eval(new Application(ttt, new Var('t')))));
-
+        System.out.println("SKI parsed from String:");
+        ski.term.Term skiFromString = SKI.parseFromString("(((S$I)$I)$I)");
+        System.out.println(skiFromString);
+        System.out.println("SKI to Lambda");
+        Term lambdaFromSKI = Lambda.fromSKI(skiFromString);
+        System.out.println(lambdaFromSKI);
+        System.out.println("SKI eval:");
+        ski.term.Term evaluatedSKI = SKI.eval(skiFromString);
+        System.out.println(evaluatedSKI);
+        System.out.println("Lambda eval:");
+        Term evaluatedLambda = Lambda.evalExpression(lambdaFromSKI);
+        Term evaluatedLambda2 = Lambda.eval(evaluatedLambda);
+        System.out.println(evaluatedLambda + " ==> " + evaluatedLambda2);
+        System.out.println("SKI applied on t param");
+        ski.term.Term skiT = new ski.term.Application(skiFromString, new ski.term.Var('t'));
+        System.out.println(skiT);
+        System.out.println("Application evaluated:");
+        System.out.println(SKI.eval(skiT));
+        System.out.println("Lambda applied on t param");
+        Term lambdaT = new Application(lambdaFromSKI, new Var('t'));
+        System.out.println(lambdaT);
+        System.out.println("Application evaluated:");
+        Term evalT = Lambda.evalExpression(lambdaT);
+        Term evalT2 = Lambda.eval(evalT);
+        System.out.println(evalT + " ==> " + evalT2);
 
         // (SK)(SK)(SK) => SK
-        System.out.println(SKI.eval(SKI.parseFromString("(SK)(SK)(SK)")));
-        Term l = Lambda.fromSKI(SKI.eval(SKI.parseFromString("(SK)(SK)(SK)")));
-        System.out.println(l);
-        Term L = Lambda.evalExpression(l);
-        System.out.println(L);
-        ski.term.Term ski = SKI.fromLambda(L);
-        System.out.println(ski);
-        System.out.println(SKI.eval(ski));
+        ski.term.Term skiExp = SKI.parseFromString("(SK)(SK)(SK)");
+        System.out.println("SKI from string:");
+        System.out.println(skiExp);
+        Term lamFromSKI = Lambda.fromSKI(skiExp);
+        System.out.println("Lambda from SKI:");
+        System.out.println(lamFromSKI);
+        ski.term.Term evalSkiExp = SKI.eval(skiExp);
+        System.out.println("Evaluated SKI:");
+        System.out.println(evalSkiExp);
+        Term evalLamExp = Lambda.evalExpression(lamFromSKI);
+        Term evalLamExp2 = Lambda.eval(evalLamExp);
+        System.out.println("Lambda evaluated in 2 steps:");
+        System.out.println(evalLamExp + " ==> " + evalLamExp2);
+        ski.term.Term skiWithParams = new ski.term.Application(new ski.term.Application(evalSkiExp, new ski.term.Var('q')), new ski.term.Var('p'));
+        System.out.println("SKI with 2 params, q p");
+        System.out.println(skiWithParams);
+        ski.term.Term evalWithParams = SKI.eval(skiWithParams);
+        System.out.println("Eval:");
+        System.out.println(evalWithParams);
+        Term lamWithParams = new Application(new Application(evalLamExp2, new Var('q')), new Var('p'));
+        System.out.println("Lambda with 2 params, q p");
+        System.out.println(lamWithParams);
+        Term evalLamWithParams = Lambda.eval(lamWithParams);
+        System.out.println("Eval:");
+        System.out.println(evalLamWithParams);
     }
-
-    //SKI.fromLambda
-    //Var.binder
-    //Lambda: subst, rename
 }
