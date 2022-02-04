@@ -1,18 +1,18 @@
-package lambda;
+package untyped.lambda;
 
-import lambda.data.Closure;
-import lambda.data.term.Application;
-import lambda.data.term.Lam;
-import lambda.data.term.Term;
-import lambda.data.term.Var;
-import lambda.data.val.VApp;
-import lambda.data.val.VLam;
-import lambda.data.val.VVar;
-import lambda.data.val.Val;
+import untyped.lambda.data.Closure;
+import untyped.lambda.data.term.Application;
+import untyped.lambda.data.term.Lam;
+import untyped.lambda.data.term.Term;
+import untyped.lambda.data.term.Var;
+import untyped.lambda.data.val.VApp;
+import untyped.lambda.data.val.VLam;
+import untyped.lambda.data.val.VVar;
+import untyped.lambda.data.val.Val;
 import org.apache.commons.lang3.tuple.Pair;
-import ski.term.I;
-import ski.term.K;
-import ski.term.S;
+import untyped.ski.term.I;
+import untyped.ski.term.K;
+import untyped.ski.term.S;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -128,9 +128,9 @@ public class Lambda {
         throw new IllegalStateException();
     }
 
-    public static Term fromSKI(ski.term.Term ski) {
-        if (ski instanceof ski.term.Var) {
-            return new Var(((ski.term.Var) ski).getName());
+    public static Term fromSKI(untyped.ski.term.Term ski) {
+        if (ski instanceof untyped.ski.term.Var) {
+            return new Var(((untyped.ski.term.Var) ski).getName());
         }
 
         if (ski instanceof S) {
@@ -162,8 +162,8 @@ public class Lambda {
             return lam;
         }
 
-        if (ski instanceof ski.term.Application) {
-            return new Application(fromSKI(((ski.term.Application) ski).getLeftTerm()), fromSKI(((ski.term.Application) ski).getRightTerm()));
+        if (ski instanceof untyped.ski.term.Application) {
+            return new Application(fromSKI(((untyped.ski.term.Application) ski).getLeftTerm()), fromSKI(((untyped.ski.term.Application) ski).getRightTerm()));
         }
 
         throw new IllegalStateException();

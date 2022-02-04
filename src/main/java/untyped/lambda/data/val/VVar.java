@@ -1,4 +1,4 @@
-package lambda.data.val;
+package untyped.lambda.data.val;
 
 public class VVar implements Val {
 

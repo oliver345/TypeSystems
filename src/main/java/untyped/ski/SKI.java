@@ -1,7 +1,7 @@
-package ski;
+package untyped.ski;
 
-import lambda.data.term.Lam;
-import ski.term.*;
+import untyped.lambda.data.term.Lam;
+import untyped.ski.term.*;
 
 import java.util.ArrayList;
 import java.util.InputMismatchException;
@@ -51,13 +51,13 @@ public class SKI {
         }
     }
 
-    public static Term fromLambda(lambda.data.term.Term lambda) {
-        if (lambda instanceof lambda.data.term.Var) {
-            return new Var(((lambda.data.term.Var) lambda).getName());
+    public static Term fromLambda(untyped.lambda.data.term.Term lambda) {
+        if (lambda instanceof untyped.lambda.data.term.Var) {
+            return new Var(((untyped.lambda.data.term.Var) lambda).getName());
         }
 
-        if (lambda instanceof lambda.data.term.Application) {
-            return new Application(fromLambda(((lambda.data.term.Application) lambda).getLeftTerm()), fromLambda(((lambda.data.term.Application) lambda).getRightTerm()));
+        if (lambda instanceof untyped.lambda.data.term.Application) {
+            return new Application(fromLambda(((untyped.lambda.data.term.Application) lambda).getLeftTerm()), fromLambda(((untyped.lambda.data.term.Application) lambda).getRightTerm()));
         }
 
         if (lambda instanceof Lam) {
@@ -87,7 +87,7 @@ public class SKI {
         }
     }
 
-    private static Term convertLambda(lambda.data.term.Var var, Term term) {
+    private static Term convertLambda(untyped.lambda.data.term.Var var, Term term) {
         if (term instanceof Var) {
             if (var.getName() == ((Var) term).getName()) {
                 return new I();

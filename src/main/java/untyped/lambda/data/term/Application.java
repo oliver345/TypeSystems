@@ -1,6 +1,6 @@
-package lambda.data.term;
+package untyped.lambda.data.term;
 
-import lambda.Lambda;
+import untyped.lambda.Lambda;
 
 public class Application implements Term {
 

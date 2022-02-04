@@ -1,4 +1,4 @@
-package ski.term;
+package untyped.ski.term;
 
 public class I extends Term {
 

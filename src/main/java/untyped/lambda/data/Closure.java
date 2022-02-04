@@ -1,7 +1,7 @@
-package lambda.data;
+package untyped.lambda.data;
 
-import lambda.data.term.Term;
-import lambda.data.val.Val;
+import untyped.lambda.data.term.Term;
+import untyped.lambda.data.val.Val;
 
 import java.util.Map;
 

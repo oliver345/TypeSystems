@@ -1,6 +1,6 @@
-package ski.term;
+package untyped.ski.term;
 
-import ski.SKI;
+import untyped.ski.SKI;
 
 public abstract class Term {
 

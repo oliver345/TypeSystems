@@ -1,6 +1,6 @@
-package lambda.data.val;
+package untyped.lambda.data.val;
 
-import lambda.data.Closure;
+import untyped.lambda.data.Closure;
 
 public class VLam implements Val {
 

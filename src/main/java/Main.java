@@ -1,9 +1,9 @@
-import lambda.Lambda;
-import lambda.data.term.Application;
-import lambda.data.term.Lam;
-import lambda.data.term.Term;
-import lambda.data.term.Var;
-import ski.SKI;
+import untyped.lambda.Lambda;
+import untyped.lambda.data.term.Application;
+import untyped.lambda.data.term.Lam;
+import untyped.lambda.data.term.Term;
+import untyped.lambda.data.term.Var;
+import untyped.ski.SKI;
 
 public class Main {
     public static void main(String[] args) {
@@ -143,20 +143,20 @@ public class Main {
         System.out.println(SKI.fromLambda(new Application(new Lam(new Var('x'), new Application(new Var('x'), new Lam(new Var('x'), new Var('x')))), new Lam(new Var('x'), new Var('x')))));
 
         System.out.println("SKI parsed from String:");
-        ski.term.Term skiFromString = SKI.parseFromString("(((S$I)$I)$I)");
+        untyped.ski.term.Term skiFromString = SKI.parseFromString("(((S$I)$I)$I)");
         System.out.println(skiFromString);
         System.out.println("SKI to Lambda");
         Term lambdaFromSKI = Lambda.fromSKI(skiFromString);
         System.out.println(lambdaFromSKI);
         System.out.println("SKI eval:");
-        ski.term.Term evaluatedSKI = SKI.eval(skiFromString);
+        untyped.ski.term.Term evaluatedSKI = SKI.eval(skiFromString);
         System.out.println(evaluatedSKI);
         System.out.println("Lambda eval:");
         Term evaluatedLambda = Lambda.evalExpression(lambdaFromSKI);
         Term evaluatedLambda2 = Lambda.eval(evaluatedLambda);
         System.out.println(evaluatedLambda + " ==> " + evaluatedLambda2);
         System.out.println("SKI applied on t param");
-        ski.term.Term skiT = new ski.term.Application(skiFromString, new ski.term.Var('t'));
+        untyped.ski.term.Term skiT = new untyped.ski.term.Application(skiFromString, new untyped.ski.term.Var('t'));
         System.out.println(skiT);
         System.out.println("Application evaluated:");
         System.out.println(SKI.eval(skiT));
@@ -169,13 +169,13 @@ public class Main {
         System.out.println(evalT + " ==> " + evalT2);
 
         // (SK)(SK)(SK) => SK
-        ski.term.Term skiExp = SKI.parseFromString("(SK)(SK)(SK)");
+        untyped.ski.term.Term skiExp = SKI.parseFromString("(SK)(SK)(SK)");
         System.out.println("SKI from string:");
         System.out.println(skiExp);
         Term lamFromSKI = Lambda.fromSKI(skiExp);
         System.out.println("Lambda from SKI:");
         System.out.println(lamFromSKI);
-        ski.term.Term evalSkiExp = SKI.eval(skiExp);
+        untyped.ski.term.Term evalSkiExp = SKI.eval(skiExp);
         System.out.println("Evaluated SKI:");
         System.out.println(evalSkiExp);
         Term evalLamExp = Lambda.evalExpression(lamFromSKI);
@@ -184,10 +184,10 @@ public class Main {
         System.out.println(evalLamExp + " ==> " + evalLamExp2);
         System.out.println("Lambda evaluated with evalUntilFinal:");
         Lambda.evalUntilFinal(lamFromSKI);
-        ski.term.Term skiWithParams = new ski.term.Application(new ski.term.Application(evalSkiExp, new ski.term.Var('q')), new ski.term.Var('p'));
+        untyped.ski.term.Term skiWithParams = new untyped.ski.term.Application(new untyped.ski.term.Application(evalSkiExp, new untyped.ski.term.Var('q')), new untyped.ski.term.Var('p'));
         System.out.println("SKI with 2 params, q p");
         System.out.println(skiWithParams);
-        ski.term.Term evalWithParams = SKI.eval(skiWithParams);
+        untyped.ski.term.Term evalWithParams = SKI.eval(skiWithParams);
         System.out.println("Eval:");
         System.out.println(evalWithParams);
         Term lamWithParams = new Application(new Application(evalLamExp2, new Var('q')), new Var('p'));
@@ -239,13 +239,13 @@ public class Main {
         System.out.println(SKI.fromLambda(Lambda.NUM_0));
 
         Lambda.evalUntilFinal(Lambda.succ(Lambda.NUM_0));
-        ski.term.Term succ0SKI = SKI.fromLambda(Lambda.evalUntilFinal(Lambda.succ(Lambda.NUM_0)));
+        untyped.ski.term.Term succ0SKI = SKI.fromLambda(Lambda.evalUntilFinal(Lambda.succ(Lambda.NUM_0)));
         System.out.println(SKI.eval(succ0SKI));
 
         System.out.println("succ test");
         Lambda.evalUntilFinal(Lambda.succ(Lambda.succ(Lambda.NUM_0)));
         Lambda.evalUntilFinal(Lambda.succ2(Lambda.succ2(Lambda.NUM_0)));
-        ski.term.Term succSucc0SKI = SKI.fromLambda(Lambda.evalUntilFinal(Lambda.succ(Lambda.succ(Lambda.NUM_0))));
+        untyped.ski.term.Term succSucc0SKI = SKI.fromLambda(Lambda.evalUntilFinal(Lambda.succ(Lambda.succ(Lambda.NUM_0))));
         System.out.println(SKI.eval(succSucc0SKI));
 
         System.out.println("SKI NUMs");
@@ -283,8 +283,8 @@ public class Main {
         System.out.println(Lambda.equals(Lambda.evalUntilFinal(Lambda.add(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0)))),
                 Lambda.evalUntilFinal(Lambda.add2(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))))));
 
-        ski.term.Term fromLamAdd = SKI.fromLambda(Lambda.add(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))));
-        ski.term.Term fromLamAdd2 = SKI.fromLambda(Lambda.add2(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))));
+        untyped.ski.term.Term fromLamAdd = SKI.fromLambda(Lambda.add(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))));
+        untyped.ski.term.Term fromLamAdd2 = SKI.fromLambda(Lambda.add2(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))));
         System.out.println(fromLamAdd);
         System.out.println(fromLamAdd2);
         System.out.println(SKI.evalWithFXParams(fromLamAdd));
