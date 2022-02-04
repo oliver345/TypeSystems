@@ -1,10 +1,10 @@
-package ski.term;
+package lambda.data.val;
 
-public class Var extends Term {
+public class VVar implements Val {
 
     private final char name;
 
-    public Var(char name) {
+    public VVar(char name) {
         this.name = name;
     }
 

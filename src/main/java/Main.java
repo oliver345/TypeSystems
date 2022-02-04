@@ -1,8 +1,8 @@
 import lambda.Lambda;
-import lambda.term.Application;
-import lambda.term.Lam;
-import lambda.term.Term;
-import lambda.term.Var;
+import lambda.data.term.Application;
+import lambda.data.term.Lam;
+import lambda.data.term.Term;
+import lambda.data.term.Var;
 import ski.SKI;
 
 public class Main {
@@ -133,7 +133,7 @@ public class Main {
         // (Lx.x(xy))N -> N(Ny)
         System.out.println(Lambda.evalExpression(new Application(new Lam(new Var('x'), new Application(new Var('x'), new Application(new Var('x'), new Var('y')))), new Var('N'))));
 
-        // (Lx.x(Lx.x))(Lx.x) => ((Lx.x):(La.a))    ???  Lx.x
+        // (Lx.x(Lx.x))(Lx.x) => ((Lx.x):(La.a))
         Term exp = Lambda.evalExpression(new Application(new Lam(new Var('x'), new Application(new Var('x'), new Lam(new Var('x'), new Var('x')))), new Lam(new Var('x'), new Var('x'))));
         System.out.println(exp);
         // ((Lx.x):(La.a)) => La.a
@@ -182,6 +182,8 @@ public class Main {
         Term evalLamExp2 = Lambda.eval(evalLamExp);
         System.out.println("Lambda evaluated in 2 steps:");
         System.out.println(evalLamExp + " ==> " + evalLamExp2);
+        System.out.println("Lambda evaluated with evalUntilFinal:");
+        Lambda.evalUntilFinal(lamFromSKI);
         ski.term.Term skiWithParams = new ski.term.Application(new ski.term.Application(evalSkiExp, new ski.term.Var('q')), new ski.term.Var('p'));
         System.out.println("SKI with 2 params, q p");
         System.out.println(skiWithParams);
@@ -194,5 +196,103 @@ public class Main {
         Term evalLamWithParams = Lambda.eval(lamWithParams);
         System.out.println("Eval:");
         System.out.println(evalLamWithParams);
+
+        System.out.println(Lambda.evalExpression(Lambda.NUM_0));
+
+        //------
+        System.out.println("Succ 0");
+        System.out.println(Lambda.succ(Lambda.NUM_0));
+        Lambda.evalUntilFinal(Lambda.succ(Lambda.NUM_0));
+
+        //------
+        System.out.println("Succ Succ 0");
+        System.out.println(Lambda.succ(Lambda.succ(Lambda.NUM_0)));
+        Lambda.evalUntilFinal(Lambda.succ(Lambda.succ(Lambda.NUM_0)));
+
+        System.out.println("Equals test:");
+        Term x = new Var('x');
+        Term y = new Var('y');
+        Term z = new Var('z');
+
+        System.out.println("x == x:");
+        System.out.println(Lambda.equals(x, x));
+        System.out.println("x == y:");
+        System.out.println(Lambda.equals(x, y));
+
+        System.out.println("xy == yx:");
+        System.out.println(Lambda.equals(new Application(x, y), new Application(y, x)));
+        System.out.println("xx == yy:");
+        System.out.println(Lambda.equals(new Application(x, x), new Application(y, y)));
+        System.out.println("zz == zz:");
+        System.out.println(Lambda.equals(new Application(z, z), new Application(z, z)));
+        System.out.println("xz == xz:");
+        System.out.println(Lambda.equals(new Application(x, z), new Application(x, z)));
+
+        System.out.println("Lx.yx == Lz.yz:");
+        System.out.println(Lambda.equals(new Lam((Var) x, new Application(y, x)), new Lam((Var) z, new Application(y, z))));
+        System.out.println("Lx.yx == Lz.xz:");
+        System.out.println(Lambda.equals(new Lam((Var) x, new Application(y, x)), new Lam((Var) z, new Application(x, z))));
+
+        //NUM: Lambda -> SKI
+        System.out.println("NUM: Lambda -> SKI");
+        System.out.println(Lambda.NUM_0);
+        System.out.println(SKI.fromLambda(Lambda.NUM_0));
+
+        Lambda.evalUntilFinal(Lambda.succ(Lambda.NUM_0));
+        ski.term.Term succ0SKI = SKI.fromLambda(Lambda.evalUntilFinal(Lambda.succ(Lambda.NUM_0)));
+        System.out.println(SKI.eval(succ0SKI));
+
+        System.out.println("succ test");
+        Lambda.evalUntilFinal(Lambda.succ(Lambda.succ(Lambda.NUM_0)));
+        Lambda.evalUntilFinal(Lambda.succ2(Lambda.succ2(Lambda.NUM_0)));
+        ski.term.Term succSucc0SKI = SKI.fromLambda(Lambda.evalUntilFinal(Lambda.succ(Lambda.succ(Lambda.NUM_0))));
+        System.out.println(SKI.eval(succSucc0SKI));
+
+        System.out.println("SKI NUMs");
+        System.out.println(SKI.NUM_0);
+
+        System.out.println(SKI.succ(SKI.NUM_0));
+
+        System.out.println(SKI.eval(SKI.parseFromString("S(S(KS)K)(KI)")));
+
+        System.out.println(SKI.eval(SKI.succ(SKI.NUM_0)));
+
+        System.out.println(SKI.eval(SKI.succ(SKI.succ(SKI.NUM_0))));
+
+        System.out.println(Lambda.evalUntilFinal(new Lam(new Var('f'), new Lam(new Var('x'), new Application(new Var('f'),
+                new Application(new Var('f'), new Var('x')))))));
+        System.out.println(SKI.eval(SKI.applyOnFX(SKI.succ(SKI.succ(SKI.NUM_0)))));
+
+        System.out.println("5+2+3");
+        //5+2+3
+        System.out.println(SKI.evalWithFXParams(SKI.add(SKI.add(SKI.decimalToSKINum(5), SKI.decimalToSKINum(2)), SKI.decimalToSKINum(3))));
+        System.out.println("short");
+        //5+2+3 short form
+        System.out.println(SKI.evalWithFXParams(SKI.decimalToSKINum(5).add(SKI.decimalToSKINum(2)).add(SKI.decimalToSKINum(3))));
+
+        // Lambda succ(succ(0)) ==> SKI: f(f(x))
+        System.out.println(SKI.evalWithFXParams(SKI.fromLambda(Lambda.succ(Lambda.succ(Lambda.NUM_0)))));
+
+        Lambda.evalUntilFinal(Lambda.fromSKI(SKI.applyOnFX(SKI.decimalToSKINum(1))));
+
+        Lambda.evalUntilFinal(Lambda.succ(Lambda.NUM_0));
+
+        Lambda.evalUntilFinal(Lambda.add(Lambda.succ(Lambda.succ(Lambda.NUM_0)), Lambda.succ(Lambda.NUM_0)));
+        Lambda.evalUntilFinal(Lambda.add2(Lambda.succ(Lambda.succ(Lambda.NUM_0)), Lambda.succ(Lambda.NUM_0)));
+
+        System.out.println(Lambda.equals(Lambda.evalUntilFinal(Lambda.add(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0)))),
+                Lambda.evalUntilFinal(Lambda.add2(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))))));
+
+        ski.term.Term fromLamAdd = SKI.fromLambda(Lambda.add(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))));
+        ski.term.Term fromLamAdd2 = SKI.fromLambda(Lambda.add2(Lambda.succ(Lambda.succ(Lambda.succ(Lambda.NUM_0))), Lambda.succ(Lambda.succ(Lambda.NUM_0))));
+        System.out.println(fromLamAdd);
+        System.out.println(fromLamAdd2);
+        System.out.println(SKI.evalWithFXParams(fromLamAdd));
+        System.out.println(SKI.evalWithFXParams(fromLamAdd2));
+
+        // Lambda: Lf.(Lx.(fx)) vs  SKI: fx    <-- succ(0)  ???
+        // Lambda SUCC nfx:  f(nfx):  _f((nf)x)_     f(n(fx)),   succ ? succ 2
+        // advanced eval
+        // Lambda quote
     }
 }

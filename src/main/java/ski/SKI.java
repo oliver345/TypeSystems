@@ -1,6 +1,6 @@
 package ski;
 
-import lambda.term.Lam;
+import lambda.data.term.Lam;
 import ski.term.*;
 
 import java.util.ArrayList;
@@ -10,6 +10,18 @@ import java.util.Stack;
 
 public class SKI {
 
+    public static final Term NUM_0;
+
+    private static final Term SUCC;
+
+    private static final Term ADD;
+
+    static {
+        NUM_0 = new Application(new K(), new I());
+        SUCC = parseFromString("S(S(KS)K)");
+        ADD = parseFromString("S(KS)(S(K(S(KS)K)))");
+    }
+
     public static Term eval(Term term) {
         if (term instanceof S || term instanceof K || term instanceof I || term instanceof Var) {
             return term;
@@ -18,6 +30,10 @@ public class SKI {
             return new Application(eval(((Application) term).getLeftTerm()), eval(((Application) term).getRightTerm())).apply();
         }
         throw new IllegalStateException();
+    }
+
+    public static Term evalWithFXParams(Term term) {
+        return eval(applyOnFX(term));
     }
 
     public static Term parseFromString(String expression) {
@@ -35,13 +51,13 @@ public class SKI {
         }
     }
 
-    public static Term fromLambda(lambda.term.Term lambda) {
-        if (lambda instanceof lambda.term.Var) {
-            return new Var(((lambda.term.Var) lambda).getName());
+    public static Term fromLambda(lambda.data.term.Term lambda) {
+        if (lambda instanceof lambda.data.term.Var) {
+            return new Var(((lambda.data.term.Var) lambda).getName());
         }
 
-        if (lambda instanceof lambda.term.Application) {
-            return new Application(fromLambda(((lambda.term.Application) lambda).getLeftTerm()), fromLambda(((lambda.term.Application) lambda).getRightTerm()));
+        if (lambda instanceof lambda.data.term.Application) {
+            return new Application(fromLambda(((lambda.data.term.Application) lambda).getLeftTerm()), fromLambda(((lambda.data.term.Application) lambda).getRightTerm()));
         }
 
         if (lambda instanceof Lam) {
@@ -50,7 +66,28 @@ public class SKI {
         throw new IllegalStateException();
     }
 
-    private static Term convertLambda(lambda.term.Var var, Term term) {
+    public static Term succ(Term term) {
+        return new Application(SUCC, term);
+    }
+
+    public static Term add(Term term, Term otherTerm) {
+        return new Application(new Application(ADD, term), otherTerm);
+    }
+
+    public static Term applyOnFX(Term term) {
+        return new Application(new Application(term, new Var('f')), new Var('x'));
+    }
+
+    public static Term decimalToSKINum(int decimalNum) {
+        if (decimalNum != 0) {
+            return succ(decimalToSKINum(--decimalNum));
+        }
+        else {
+            return NUM_0;
+        }
+    }
+
+    private static Term convertLambda(lambda.data.term.Var var, Term term) {
         if (term instanceof Var) {
             if (var.getName() == ((Var) term).getName()) {
                 return new I();

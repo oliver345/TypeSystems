@@ -1,4 +1,4 @@
-package lambda.term;
+package lambda.data.term;
 
 public class Var implements Term {
 

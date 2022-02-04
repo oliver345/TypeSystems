@@ -1,6 +1,6 @@
 package ski.term;
 
-public class K implements Term {
+public class K extends Term {
 
     @Override
     public String toString() {

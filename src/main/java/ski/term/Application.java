@@ -1,6 +1,6 @@
 package ski.term;
 
-public class Application implements Term {
+public class Application extends Term {
 
     private final Term leftTerm;
 

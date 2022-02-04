@@ -1,4 +1,10 @@
 package ski.term;
 
-public interface Term {
+import ski.SKI;
+
+public abstract class Term {
+
+    public Term add(Term term) {
+        return SKI.add(this, term);
+    }
 }
