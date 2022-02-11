@@ -45,7 +45,6 @@ public class Parser {
     }
 
     private static boolean isItInAFunction(String input, int posOfBracket) {
-        Stream.of(Ty.TypeImplementationEnum.values()).map(Ty.TypeImplementationEnum::getTypeName).forEach(System.out::println);
         String afterBracket = input.substring(posOfBracket + 1);
         return Stream.of(Ty.TypeImplementationEnum.values())
                 .map(Ty.TypeImplementationEnum::getTypeName)
@@ -90,6 +89,9 @@ public class Parser {
         else if (token.equals("K")) {
             return new K();
         }
+        else if (token.equals("I")) {
+            return new I();
+        }
         else if (token.equals("True")) {
             return new True();
         }
@@ -109,7 +111,6 @@ public class Parser {
     }
 
     private static Ty parseType(String input) {
-        System.out.println("Parse:_" + input + "_");
         if (input.equals("Bool")) {
             return new Bool();
         }
@@ -133,12 +134,9 @@ public class Parser {
             }
             else {
                 if (input.length() > matcher.end()) {
-                    System.out.println("1"+input.substring(matcher.start() + 1, matcher.end() - 1));
-                    System.out.println("12"+input.substring(matcher.end() + 2));
                     return new Function(parseType(input.substring(matcher.start() + 1, matcher.end() - 1)), parseType(input.substring(matcher.end() + 2)));
                 }
                 else {
-                    System.out.println("2"+input.substring(matcher.start() + 1, matcher.end() - 1));
                     return parseType(input.substring(matcher.start() + 1, matcher.end() - 1));
                 }
             }

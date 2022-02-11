@@ -305,10 +305,12 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("S (K:Bool->Bool->Bool) (K:Bool->Bool->Bool) True True");
 
         //Preterm parseTree = Parser.createParseTree("S K (K:(Bool->Bool)->Bool)");
-        //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool True True");
+        Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool True");
+        //Preterm parseTree = Parser.createParseTree("K:Bool->Bool->Bool True True");
+        //Preterm parseTree = Parser.createParseTree("I:Str->Str xxx");
         //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)-> > K (K:Bool->Bool->Bool))");
         //Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool)");
-        Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool True True)");
+        //Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool True True)");
         Maybe maybeWtt = TypeChecker.infer(parseTree);
         if (maybeWtt instanceof WellTypedTree) {
             System.out.println(((WellTypedTree) maybeWtt).getType());

@@ -14,7 +14,7 @@ import typed.ski.typechecker.maybe.WellTypedTree;
 public class TypeChecker {
 
     public static Maybe infer(Preterm parseTree) {
-        if (parseTree instanceof S || parseTree instanceof K || parseTree instanceof ITE) {
+        if (parseTree instanceof S || parseTree instanceof K || parseTree instanceof I || parseTree instanceof ITE) {
             return new Error();
         }
 
@@ -95,6 +95,12 @@ public class TypeChecker {
                 return new WellTypedTree(new typed.ski.lang.term.K(((Function) type).getInputType(), ((Function) ((Function) type).getResultType()).getInputType()), null);
             }
             return new Error();
+        }
+
+        if (parseTree instanceof I) {
+            if (type instanceof Function && ((Function) type).getInputType().getClass().equals(((Function) type).getResultType().getClass())) {
+                return new WellTypedTree(new typed.ski.lang.term.I(((Function) type).getInputType()), null);
+            }
         }
 
         if (parseTree instanceof True && type instanceof Bool) {
