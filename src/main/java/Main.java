@@ -1,3 +1,8 @@
+import typed.ski.lang.preterm.Preterm;
+import typed.ski.parser.Parser;
+import typed.ski.typechecker.TypeChecker;
+import typed.ski.typechecker.maybe.Maybe;
+import typed.ski.typechecker.maybe.WellTypedTree;
 import untyped.lambda.Lambda;
 import untyped.lambda.data.term.Application;
 import untyped.lambda.data.term.Lam;
@@ -294,5 +299,22 @@ public class Main {
         // Lambda SUCC nfx:  f(nfx):  _f((nf)x)_     f(n(fx)),   succ ? succ 2
         // advanced eval
         // Lambda quote
+
+        //Preterm parseTree = Parser.createParseTree("S False (K:Bool->Bool->Bool) (True S ) ITE K lit");
+        //Preterm parseTree = Parser.createParseTree("K:Bool->Bool->Bool True True");
+        //Preterm parseTree = Parser.createParseTree("S (K:Bool->Bool->Bool) (K:Bool->Bool->Bool) True True");
+
+        //Preterm parseTree = Parser.createParseTree("S K (K:(Bool->Bool)->Bool)");
+        //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool True True");
+        //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)-> > K (K:Bool->Bool->Bool))");
+        //Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool)");
+        Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool True True)");
+        Maybe maybeWtt = TypeChecker.infer(parseTree);
+        if (maybeWtt instanceof WellTypedTree) {
+            System.out.println(((WellTypedTree) maybeWtt).getType());
+            System.out.println(((WellTypedTree) maybeWtt).getWellTypedTree());
+        }
+        System.out.println(parseTree);
+        System.out.println(maybeWtt);
     }
 }
