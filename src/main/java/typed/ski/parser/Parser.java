@@ -49,7 +49,7 @@ public class Parser {
         return Stream.of(Ty.TypeImplementationEnum.values())
                 .map(Ty.TypeImplementationEnum::getTypeName)
                 .anyMatch(afterBracket::startsWith) ||
-                input.substring(0, posOfBracket).contains("->");
+                (input.substring(0, posOfBracket).contains("->") && !input.substring(0, posOfBracket).contains(" "));
     }
 
     private static int findClosingBracket(String text, int pos) {

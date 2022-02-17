@@ -84,7 +84,8 @@ public class TypeChecker {
                         return new Error();
                     }
 
-                    return new WellTypedTree(new typed.ski.lang.term.S(A, B, C), null);
+                    //return new WellTypedTree(new typed.ski.lang.term.S(A, B, C), null);
+                    return new WellTypedTree(new typed.ski.lang.term.S(new Function(A, new Function(B, C)), new Function(A, B), C), null);
                 }
             }
             return new Error();
@@ -109,6 +110,17 @@ public class TypeChecker {
 
         if (parseTree instanceof False && type instanceof Bool) {
             return new WellTypedTree(new typed.ski.lang.term.False(), null);
+        }
+
+        if (parseTree instanceof ITE && type instanceof Function) {
+            if (((Function) type).getInputType() instanceof Bool && ((Function) type).getResultType() instanceof Function) {
+                Ty A = ((Function) ((Function) type).getResultType()).getInputType();
+                if (((Function) ((Function) type).getResultType()).getResultType() instanceof Function &&
+                        ((Function) ((Function) ((Function) type).getResultType()).getResultType()).getInputType().getClass().equals(A.getClass()) &&
+                        ((Function) ((Function) ((Function) type).getResultType()).getResultType()).getResultType().getClass().equals(A.getClass())) {
+                    return new WellTypedTree(new typed.ski.lang.term.ITE(A), null);
+                }
+            }
         }
         return new Error();
     }
