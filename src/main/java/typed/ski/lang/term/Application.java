@@ -46,11 +46,6 @@ public class Application implements Term {
                 return subApplication.getRightTerm();
             }
 
-            //???
-            if (subApplication.getLeftTerm() instanceof Literal) {
-                return this;
-            }
-
             if (subApplication.getLeftTerm() instanceof ITE) {
                 return this;
             }

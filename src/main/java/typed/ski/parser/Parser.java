@@ -24,13 +24,50 @@ public class Parser {
 
         int pos = 0;
         int firstNotProcessedPos = 0;
-        while (pos < input.length()) {
+        /*while (pos < input.length()) {
             if (input.charAt(pos) == '(' && !isItInAFunction(input, pos)) {
                 int closingPos = findClosingBracket(input, pos + 1);
                 appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms);
                 preterms.add(createParseTree(input.substring(pos + 1, closingPos)));
                 firstNotProcessedPos = closingPos + 1;
                 pos = closingPos + 1;
+            }
+            else {
+                ++pos;
+            }
+        }*/
+
+        while (pos < input.length()) {
+            if (input.charAt(pos) == '(') {
+                if (isInAnnotatedTerm(input, pos)) {
+                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms);
+                    int closingPos = findClosingBracket(input, pos + 1);
+                    Preterm term = createParseTree(input.substring(pos + 1, closingPos));
+
+                    int spaceDistance = input.substring(closingPos + 2).indexOf(" ");
+                    String type;
+                    if (spaceDistance > -1) {
+                        type = input.substring(closingPos + 2, closingPos + 2 + spaceDistance);
+                        firstNotProcessedPos = closingPos + spaceDistance + 3;
+                        pos = closingPos + spaceDistance + 3;
+                    }
+                    else {
+                        type = input.substring(closingPos + 2);
+                        firstNotProcessedPos = input.length();
+                        pos = input.length();
+                    }
+                    preterms.add(new AnnotatedPreterm(term, parseType(type)));
+                }
+                else if(!isItInAFunction(input, pos)) {
+                    int closingPos = findClosingBracket(input, pos + 1);
+                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms);
+                    preterms.add(createParseTree(input.substring(pos + 1, closingPos)));
+                    firstNotProcessedPos = closingPos + 1;
+                    pos = closingPos + 1;
+                }
+                else {
+                    ++pos;
+                }
             }
             else {
                 ++pos;
@@ -44,12 +81,17 @@ public class Parser {
         return preterms.size() == 1 ? preterms.get(0) : preterms.stream().reduce(App::new).orElseThrow();
     }
 
+    private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) {
+        int closingPos = findClosingBracket(input, posOfOpeningBracket + 1);
+        return closingPos < input.length() - 1 && input.charAt(closingPos + 1) == ':';
+    }
+
     private static boolean isItInAFunction(String input, int posOfBracket) {
         String afterBracket = input.substring(posOfBracket + 1);
         return Stream.of(Ty.TypeImplementationEnum.values())
                 .map(Ty.TypeImplementationEnum::getTypeName)
                 .anyMatch(afterBracket::startsWith) ||
-                (input.substring(0, posOfBracket).contains("->") && !input.substring(0, posOfBracket).contains(" "));
+                ((input.substring(0, posOfBracket).contains("->") || input.substring(0, posOfBracket).contains(":")) && !input.substring(0, posOfBracket).contains(" "));
     }
 
     private static int findClosingBracket(String text, int pos) {
@@ -103,7 +145,7 @@ public class Parser {
         }
         else if (token.contains(":")) {
             int indexOfColon = token.indexOf(":");
-            return new PtmTy(tokenToPreterm(token.substring(0, indexOfColon)), parseType(token.substring(indexOfColon + 1)));
+            return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon)), parseType(token.substring(indexOfColon + 1)));
         }
         else {
             return new Lit(token);

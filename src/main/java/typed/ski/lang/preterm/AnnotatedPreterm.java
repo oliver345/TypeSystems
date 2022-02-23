@@ -2,13 +2,13 @@ package typed.ski.lang.preterm;
 
 import typed.ski.lang.type.Ty;
 
-public class PtmTy implements Preterm {
+public class AnnotatedPreterm implements Preterm {
 
     private final Preterm preterm;
 
     private final Ty type;
 
-    public PtmTy(Preterm preterm, Ty type) {
+    public AnnotatedPreterm(Preterm preterm, Ty type) {
         this.preterm = preterm;
         this.type = type;
     }

@@ -23,6 +23,6 @@ public class K implements Term {
 
     @Override
     public String toString() {
-        return "K";
+        return "K[" + x + ", " + y + "]";
     }
 }

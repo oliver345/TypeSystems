@@ -16,6 +16,6 @@ public class ITE implements Term {
 
     @Override
     public String toString() {
-        return "ITE";
+        return "ITE[" + type + "]";
     }
 }
