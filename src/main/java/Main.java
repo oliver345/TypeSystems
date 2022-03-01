@@ -1,15 +1,24 @@
 import org.apache.commons.lang3.tuple.Pair;
-import typed.ski.evaluator.Evaluator;
-import typed.ski.lang.preterm.Preterm;
-import typed.ski.lang.term.Term;
-import typed.ski.lang.type.Ty;
-import typed.ski.parser.Parser;
-import typed.ski.typechecker.TypeChecker;
+import typed.ski.deep.evaluator.Evaluator;
+import typed.ski.deep.lang.preterm.Preterm;
+import typed.ski.deep.lang.term.Term;
+import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.parser.Parser;
+import typed.ski.deep.typechecker.TypeChecker;
+import typed.ski.shallow.ShallowSKI;
 
 import java.util.Optional;
 
 public class Main {
     public static void main(String[] args) {
+        ShallowSKI ski = new ShallowSKI() {
+            @Override
+            public void run() {
+                super.run();
+            }
+        };
+        ski.run();
+
         //Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool):Bool->Bool->Bool");
         //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool True");
         // ==>
