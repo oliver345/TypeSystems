@@ -5,18 +5,29 @@ import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.term.Application;
 import typed.ski.deep.lang.term.Literal;
 import typed.ski.deep.lang.term.Term;
-import typed.ski.deep.lang.type.Bool;
-import typed.ski.deep.lang.type.Function;
-import typed.ski.deep.lang.type.Str;
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.*;
 
 import java.util.Optional;
 
 public class TypeChecker {
 
     public static Optional<Pair<Term, Ty>> infer(Preterm parseTree) {
-        if (parseTree instanceof S || parseTree instanceof K || parseTree instanceof I || parseTree instanceof ITE) {
+        if (parseTree instanceof S || parseTree instanceof K || parseTree instanceof I || parseTree instanceof ITE ||
+                parseTree instanceof K_A || parseTree instanceof K_B || parseTree instanceof Succ) {
             return Optional.empty();
+        }
+
+        if (parseTree instanceof K_AB) {
+            K_AB kAB = (K_AB) parseTree;
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.K(kAB.getA(), kAB.getB()),
+                    new Function(kAB.getA(), new Function(kAB.getB(), kAB.getA()))));
+        }
+
+        if (parseTree instanceof Rec) {
+            Ty recType = ((Rec) parseTree).getX();
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.Rec(recType),
+                    new Function(recType, new Function(new Function(new Nat(), new Function(recType, recType)),
+                            new Function(new Nat(), recType)))));
         }
 
         if (parseTree instanceof True) {
@@ -27,32 +38,64 @@ public class TypeChecker {
             return Optional.of(Pair.of(new typed.ski.deep.lang.term.False(), new Bool()));
         }
 
+        if (parseTree instanceof ZERO) {
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.ZERO(), new Nat()));
+        }
+
         if (parseTree instanceof AnnotatedPreterm) {
             Optional<Term> termOptional = check(((AnnotatedPreterm) parseTree).getPreterm(), ((AnnotatedPreterm) parseTree).getType());
             return termOptional.map(term -> Pair.of(term, ((AnnotatedPreterm) parseTree).getType()));
         }
 
         if (parseTree instanceof App) {
-            Optional<Pair<Term, Ty>> leftWttOpt = infer(((App) parseTree).getLeftTerm());
             Optional<Pair<Term, Ty>> rightWttOpt = infer(((App) parseTree).getRightTerm());
-
-            if (leftWttOpt.isEmpty() || rightWttOpt.isEmpty()) {
+            if (rightWttOpt.isEmpty()) {
                 return Optional.empty();
             }
-
-            Pair<Term, Ty> leftWtt = leftWttOpt.get();
             Pair<Term, Ty> rightWtt = rightWttOpt.get();
 
-            // ((C,c),(D,d)) -> if (C = D->E) then (E, c'd) else Error,, alaposabb típus összehasonlítás kell?
-            if (leftWtt.getRight() instanceof Function &&
-                    ((Function) leftWtt.getRight()).getInputType().getClass().equals(rightWtt.getRight().getClass())) {
-                return Optional.of(Pair.of(new Application(leftWtt.getRight(), rightWtt.getRight(), leftWtt.getLeft(),
-                        rightWtt.getLeft()), ((Function) leftWtt.getRight()).getResultType()));
+            if (((App) parseTree).getLeftTerm() instanceof K_B) {
+                return Optional.of(Pair.of(new Application(
+                        new Function(rightWtt.getRight(), new Function(((K_B) ((App) parseTree).getLeftTerm()).getB(), rightWtt.getRight())),
+                        rightWtt.getRight(),
+                        new typed.ski.deep.lang.term.K(rightWtt.getRight(), ((K_B) ((App) parseTree).getLeftTerm()).getB()),
+                        rightWtt.getLeft()),
+                        new Function(((K_B) ((App) parseTree).getLeftTerm()).getB(), rightWtt.getRight())
+                ));
+            }
+            /*else if (((App) parseTree).getLeftTerm() instanceof K_A) { ---
+            }*/
+            else if (((App) parseTree).getLeftTerm() instanceof K_AB) {
+                K_AB kAB = (K_AB) ((App) parseTree).getLeftTerm();
+                if (areTypesEqual(kAB.getA(), rightWtt.getRight())) {
+                    return Optional.of(Pair.of(new Application(
+                            new Function(kAB.getA(), new Function(kAB.getB(), kAB.getA())),
+                            rightWtt.getRight(),
+                            new typed.ski.deep.lang.term.K(kAB.getA(), kAB.getB()),
+                            rightWtt.getLeft()),
+                            new Function(kAB.getB(), kAB.getA())
+                    ));
+                }
+            }
+            else {
+                Optional<Pair<Term, Ty>> leftWttOpt = infer(((App) parseTree).getLeftTerm());
+
+                if (leftWttOpt.isEmpty()) {
+                    return Optional.empty();
+                }
+                Pair<Term, Ty> leftWtt = leftWttOpt.get();
+
+                // ((C,c),(D,d)) -> if (C = D->E) then (E, c'd) else Error,, areFunctionsEquel? ---
+                if (leftWtt.getRight() instanceof Function &&
+                        ((Function) leftWtt.getRight()).getInputType().getClass().equals(rightWtt.getRight().getClass())) {
+                    return Optional.of(Pair.of(new Application(leftWtt.getRight(), rightWtt.getRight(), leftWtt.getLeft(),
+                            rightWtt.getLeft()), ((Function) leftWtt.getRight()).getResultType()));
+                }
             }
             return Optional.empty();
         }
 
-        //Check???
+        //Check ---
         if (parseTree instanceof Lit) {
             return Optional.of(Pair.of(new Literal(((Lit) parseTree).getName()), new Str()));
         }
@@ -116,6 +159,9 @@ public class TypeChecker {
         else if (parseTree instanceof False && type instanceof Bool) {
             return Optional.of(new typed.ski.deep.lang.term.False());
         }
+        else if (parseTree instanceof ZERO && type instanceof Nat) {
+            return Optional.of(new typed.ski.deep.lang.term.ZERO());
+        }
         else if (parseTree instanceof ITE && type instanceof Function) {
             if (((Function) type).getInputType() instanceof Bool && ((Function) type).getResultType() instanceof Function) {
                 Ty A = ((Function) ((Function) type).getResultType()).getInputType();
@@ -141,6 +187,20 @@ public class TypeChecker {
                         paramWttOpt.get().getRight(),
                         functionWtt,
                         paramWttOpt.get().getLeft()));
+            }
+        }
+        else if (parseTree instanceof Succ && type instanceof Function) {
+            if (areTypesEqual(type, new Function(new Nat(), new Nat()))) {
+                return Optional.of(new typed.ski.deep.lang.term.Succ());
+            }
+        }
+        else if (parseTree instanceof Rec) {
+            Ty recType = ((Rec) parseTree).getX();
+            Ty expectedType = new Function(recType, new Function(new Function(new Nat(), new Function(recType, recType)),
+                    new Function(new Nat(), recType)));
+
+            if (areTypesEqual(expectedType, type)) {
+                return Optional.of(new typed.ski.deep.lang.term.Rec(recType));
             }
         }
 

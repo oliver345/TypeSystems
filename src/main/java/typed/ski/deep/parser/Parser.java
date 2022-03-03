@@ -1,10 +1,7 @@
 package typed.ski.deep.parser;
 
 import typed.ski.deep.lang.preterm.*;
-import typed.ski.deep.lang.type.Bool;
-import typed.ski.deep.lang.type.Function;
-import typed.ski.deep.lang.type.Str;
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,18 +21,6 @@ public class Parser {
 
         int pos = 0;
         int firstNotProcessedPos = 0;
-        /*while (pos < input.length()) {
-            if (input.charAt(pos) == '(' && !isItInAFunction(input, pos)) {
-                int closingPos = findClosingBracket(input, pos + 1);
-                appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms);
-                preterms.add(createParseTree(input.substring(pos + 1, closingPos)));
-                firstNotProcessedPos = closingPos + 1;
-                pos = closingPos + 1;
-            }
-            else {
-                ++pos;
-            }
-        }*/
 
         while (pos < input.length()) {
             if (input.charAt(pos) == '(') {
@@ -125,11 +110,44 @@ public class Parser {
     }
 
     private static Preterm tokenToPreterm(String token) {
-        if (token.equals("S")) {
+        if (token.contains(":")) {
+            int indexOfColon = token.indexOf(":");
+            return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon)), parseType(token.substring(indexOfColon + 1)));
+        }
+        else if (token.equals("S")) {
             return new S();
         }
-        else if (token.equals("K")) {
-            return new K();
+        else if (token.startsWith("K")) {
+            if (token.equals("K")) {
+                return new K();
+            }
+            else if (token.contains("}{")){
+                String[] parts = token.split("}\\{");
+                String part1 = parts[0].substring(2);
+                String part2 = parts[1].substring(0, parts[1].length() - 1);
+                if (!part1.isEmpty() && !part2.isEmpty()) {
+                    return new K_AB(parseType(part1), parseType(part2));
+                }
+                else if (!part1.isEmpty()) {
+                    return new K_A(parseType(part1));
+                }
+                else if (!part2.isEmpty()) {
+                    return new K_B(parseType(part2));
+                }
+                throw new IllegalStateException("No implicit types were given to K: " + token);
+            }
+            else {
+                throw new IllegalStateException("Token can not be parsed as any kind of K preterm: " + token);
+            }
+        }
+        else if (token.startsWith("Rec") && token.endsWith("}")) {
+            int pos = token.indexOf("{");
+            if (pos > 0) {
+                return new Rec(parseType(token.substring(pos + 1, token.length() - 1)));
+            }
+            else {
+                throw new IllegalStateException("Invalid expression: " + token);
+            }
         }
         else if (token.equals("I")) {
             return new I();
@@ -143,9 +161,11 @@ public class Parser {
         else if (token.equals("ITE")) {
             return new ITE();
         }
-        else if (token.contains(":")) {
-            int indexOfColon = token.indexOf(":");
-            return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon)), parseType(token.substring(indexOfColon + 1)));
+        else if (token.equals("Succ")) {
+            return new Succ();
+        }
+        else if (token.equals("ZERO")) {
+            return new ZERO();
         }
         else {
             return new Lit(token);
@@ -158,6 +178,9 @@ public class Parser {
         }
         else if (input.equals("Str")) {
             return new Str();
+        }
+        else if (input.equals("Nat")) {
+            return new Nat();
         }
         else if (input.contains("->")) {
             //Remove outer brackets
