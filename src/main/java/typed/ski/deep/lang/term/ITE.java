@@ -1,16 +1,16 @@
 package typed.ski.deep.lang.term;
 
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
 
 public class ITE implements Term {
 
-    private final Ty type;
+    private final PreType type;
 
-    public ITE(Ty type) {
+    public ITE(PreType type) {
         this.type = type;
     }
 
-    public Ty getType() {
+    public PreType getType() {
         return type;
     }
 

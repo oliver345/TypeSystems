@@ -2,26 +2,26 @@ package typed.ski.deep.lang.term;
 
 import typed.ski.deep.lang.type.Function;
 import typed.ski.deep.lang.type.Nat;
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
 
 public class Application implements Term {
 
-    private final Ty leftType;
+    private final PreType leftType;
 
-    private final Ty rightType;
+    private final PreType rightType;
 
     private final Term leftTerm;
 
     private final Term rightTerm;
 
-    public Application(Ty leftType, Ty rightType, Term leftTerm, Term rightTerm) {
+    public Application(PreType leftType, PreType rightType, Term leftTerm, Term rightTerm) {
         this.leftType = leftType;
         this.rightType = rightType;
         this.leftTerm = leftTerm;
         this.rightTerm = rightTerm;
     }
 
-    public Ty getLeftType() {
+    public PreType getLeftType() {
         return leftType;
     }
 
@@ -77,10 +77,10 @@ public class Application implements Term {
                     //rightTerm == Succ n
                     else if (rightTerm instanceof Application) {
                         Rec termRec = (Rec) ((Application) subApplication.getLeftTerm()).getLeftTerm();
-                        Ty recTypeParam = termRec.getX();
-                        Ty typeRec = ((Application) subApplication.getLeftTerm()).getLeftType();
+                        PreType recTypeParam = termRec.getX();
+                        PreType typeRec = ((Application) subApplication.getLeftTerm()).getLeftType();
                         Term termS = subApplication.getRightTerm();
-                        Ty typeS = subApplication.getRightType();
+                        PreType typeS = subApplication.getRightType();
                         Application appSN = new Application(subApplication.getRightType(),
                                 ((Application) rightTerm).getRightType(), termS, ((Application) rightTerm).getRightTerm());
                         Application appRec = new Application(
@@ -99,7 +99,7 @@ public class Application implements Term {
         throw new IllegalStateException();
     }
 
-    public Ty getRightType() {
+    public PreType getRightType() {
         return rightType;
     }
 

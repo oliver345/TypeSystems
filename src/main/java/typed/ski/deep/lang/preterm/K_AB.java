@@ -1,23 +1,23 @@
 package typed.ski.deep.lang.preterm;
 
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
 
 public class K_AB implements Preterm {
 
-    private final Ty a;
+    private final PreType a;
 
-    private final Ty b;
+    private final PreType b;
 
-    public K_AB(Ty a, Ty b) {
+    public K_AB(PreType a, PreType b) {
         this.a = a;
         this.b = b;
     }
 
-    public Ty getA() {
+    public PreType getA() {
         return a;
     }
 
-    public Ty getB() {
+    public PreType getB() {
         return b;
     }
 

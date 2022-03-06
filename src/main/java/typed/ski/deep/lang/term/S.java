@@ -1,30 +1,30 @@
 package typed.ski.deep.lang.term;
 
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
 
 public class S implements Term {
 
-    private final Ty x;
+    private final PreType x;
 
-    private final Ty y;
+    private final PreType y;
 
-    private final Ty z;
+    private final PreType z;
 
-    public S(Ty x, Ty y, Ty z) {
+    public S(PreType x, PreType y, PreType z) {
         this.x = x;
         this.y = y;
         this.z = z;
     }
 
-    public Ty getX() {
+    public PreType getX() {
         return x;
     }
 
-    public Ty getY() {
+    public PreType getY() {
         return y;
     }
 
-    public Ty getZ() {
+    public PreType getZ() {
         return z;
     }
 

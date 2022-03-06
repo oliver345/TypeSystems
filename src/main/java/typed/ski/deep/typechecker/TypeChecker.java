@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public class TypeChecker {
 
-    public static Optional<Pair<Term, Ty>> infer(Preterm parseTree) {
+    public static Optional<Pair<Term, PreType>> infer(Preterm parseTree) {
         if (parseTree instanceof S || parseTree instanceof K || parseTree instanceof I || parseTree instanceof ITE ||
                 parseTree instanceof K_A || parseTree instanceof K_B || parseTree instanceof Succ) {
             return Optional.empty();
@@ -24,7 +24,7 @@ public class TypeChecker {
         }
 
         if (parseTree instanceof Rec) {
-            Ty recType = ((Rec) parseTree).getX();
+            PreType recType = ((Rec) parseTree).getX();
             return Optional.of(Pair.of(new typed.ski.deep.lang.term.Rec(recType),
                     new Function(recType, new Function(new Function(new Nat(), new Function(recType, recType)),
                             new Function(new Nat(), recType)))));
@@ -48,11 +48,11 @@ public class TypeChecker {
         }
 
         if (parseTree instanceof App) {
-            Optional<Pair<Term, Ty>> rightWttOpt = infer(((App) parseTree).getRightTerm());
+            Optional<Pair<Term, PreType>> rightWttOpt = infer(((App) parseTree).getRightTerm());
             if (rightWttOpt.isEmpty()) {
                 return Optional.empty();
             }
-            Pair<Term, Ty> rightWtt = rightWttOpt.get();
+            Pair<Term, PreType> rightWtt = rightWttOpt.get();
 
             if (((App) parseTree).getLeftTerm() instanceof K_B) {
                 return Optional.of(Pair.of(new Application(
@@ -78,12 +78,12 @@ public class TypeChecker {
                 }
             }
             else {
-                Optional<Pair<Term, Ty>> leftWttOpt = infer(((App) parseTree).getLeftTerm());
+                Optional<Pair<Term, PreType>> leftWttOpt = infer(((App) parseTree).getLeftTerm());
 
                 if (leftWttOpt.isEmpty()) {
                     return Optional.empty();
                 }
-                Pair<Term, Ty> leftWtt = leftWttOpt.get();
+                Pair<Term, PreType> leftWtt = leftWttOpt.get();
 
                 // ((C,c),(D,d)) -> if (C = D->E) then (E, c'd) else Error,, areFunctionsEquel? ---
                 if (leftWtt.getRight() instanceof Function &&
@@ -102,7 +102,7 @@ public class TypeChecker {
         throw new IllegalStateException();
     }
 
-    public static boolean areTypesEqual(Ty type, Ty otherType) {
+    public static boolean areTypesEqual(PreType type, PreType otherType) {
         if (type == null || otherType == null) {
             return false;
         }
@@ -111,10 +111,10 @@ public class TypeChecker {
                 compareFunctions((Function) type, (Function) otherType) : type.getClass().equals(otherType.getClass());
     }
 
-    private static Optional<Term> check(Preterm parseTree, Ty type) {
+    private static Optional<Term> check(Preterm parseTree, PreType type) {
         if (parseTree instanceof S) {
             if (type instanceof Function && ((Function) type).getInputType() instanceof Function && ((Function) type).getResultType() instanceof Function) {
-                Ty A, B, C;
+                PreType A, B, C;
                 // Extract types of S' first param (A->B-C)
                 if (((Function) ((Function) type).getInputType()).getResultType() instanceof Function) {
                     A = ((Function) ((Function) type).getInputType()).getInputType();
@@ -125,8 +125,8 @@ public class TypeChecker {
                     return Optional.empty();
                 }
 
-                Ty param2 = ((Function) ((Function) type).getResultType()).getInputType();
-                Ty param3AndReturnType = ((Function) ((Function) type).getResultType()).getResultType();
+                PreType param2 = ((Function) ((Function) type).getResultType()).getInputType();
+                PreType param3AndReturnType = ((Function) ((Function) type).getResultType()).getResultType();
                 if (param2 instanceof Function && param3AndReturnType instanceof Function) {
                     // Compare types of the 2nd param (A->B)
                     if (!((Function) param2).getInputType().getClass().equals(A.getClass()) || !((Function) param2).getResultType().getClass().equals(B.getClass())){
@@ -164,7 +164,7 @@ public class TypeChecker {
         }
         else if (parseTree instanceof ITE && type instanceof Function) {
             if (((Function) type).getInputType() instanceof Bool && ((Function) type).getResultType() instanceof Function) {
-                Ty A = ((Function) ((Function) type).getResultType()).getInputType();
+                PreType A = ((Function) ((Function) type).getResultType()).getInputType();
                 if (((Function) ((Function) type).getResultType()).getResultType() instanceof Function &&
                         ((Function) ((Function) ((Function) type).getResultType()).getResultType()).getInputType().getClass().equals(A.getClass()) &&
                         ((Function) ((Function) ((Function) type).getResultType()).getResultType()).getResultType().getClass().equals(A.getClass())) {
@@ -179,7 +179,7 @@ public class TypeChecker {
 
         }
         else if (parseTree instanceof App) {
-            Optional<Pair<Term, Ty>> paramWttOpt = infer(((App) parseTree).getRightTerm());
+            Optional<Pair<Term, PreType>> paramWttOpt = infer(((App) parseTree).getRightTerm());
             if (paramWttOpt.isPresent()) {
                 Optional<Term> functionWttOpt = check(((App) parseTree).getLeftTerm(), new Function(paramWttOpt.get().getRight(), type));
                 return functionWttOpt.map(functionWtt -> new Application(new Function(
@@ -195,8 +195,8 @@ public class TypeChecker {
             }
         }
         else if (parseTree instanceof Rec) {
-            Ty recType = ((Rec) parseTree).getX();
-            Ty expectedType = new Function(recType, new Function(new Function(new Nat(), new Function(recType, recType)),
+            PreType recType = ((Rec) parseTree).getX();
+            PreType expectedType = new Function(recType, new Function(new Function(new Nat(), new Function(recType, recType)),
                     new Function(new Nat(), recType)));
 
             if (areTypesEqual(expectedType, type)) {

@@ -2,7 +2,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import typed.ski.deep.evaluator.Evaluator;
 import typed.ski.deep.lang.preterm.Preterm;
 import typed.ski.deep.lang.term.Term;
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
 import typed.ski.deep.parser.Parser;
 import typed.ski.deep.typechecker.TypeChecker;
 
@@ -50,7 +50,7 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("(K True):Bool->Bool False");
         //Preterm parseTree = Parser.createParseTree("I:Bool->Bool True");
         //Preterm parseTree = Parser.createParseTree("True:Bool");
-        Optional<Pair<Term, Ty>> wttOpt = TypeChecker.infer(parseTree);
+        Optional<Pair<Term, PreType>> wttOpt = TypeChecker.infer(parseTree);
         System.out.println(parseTree);
         System.out.println(wttOpt);
         wttOpt.ifPresent(wtt -> System.out.println(Evaluator.eval(wtt.getLeft())));

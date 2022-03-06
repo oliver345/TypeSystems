@@ -172,7 +172,7 @@ public class Parser {
         }
     }
 
-    private static Ty parseType(String input) {
+    private static PreType parseType(String input) {
         if (input.equals("Bool")) {
             return new Bool();
         }

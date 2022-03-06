@@ -2,20 +2,20 @@ package typed.ski.deep.lang.type;
 
 public class Function implements Ty {
 
-    private final Ty inputType;
+    private final PreType inputType;
 
-    private final Ty resultType;
+    private final PreType resultType;
 
-    public Function(Ty inputType, Ty resultType) {
+    public Function(PreType inputType, PreType resultType) {
         this.inputType = inputType;
         this.resultType = resultType;
     }
 
-    public Ty getInputType() {
+    public PreType getInputType() {
         return inputType;
     }
 
-    public Ty getResultType() {
+    public PreType getResultType() {
         return resultType;
     }
 

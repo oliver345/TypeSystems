@@ -1,16 +1,16 @@
 package typed.ski.deep.lang.preterm;
 
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
 
 public class Rec implements Preterm {
 
-    private final Ty x;
+    private final PreType x;
 
-    public Rec(Ty x) {
+    public Rec(PreType x) {
         this.x = x;
     }
 
-    public Ty getX() {
+    public PreType getX() {
         return x;
     }
 
