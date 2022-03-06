@@ -28,20 +28,12 @@ public class Application implements Term {
     public Term apply() {
 
         if (leftTerm instanceof S || leftTerm instanceof K || leftTerm instanceof Literal || leftTerm instanceof True ||
-                leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec) {
+                leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec || leftTerm instanceof Succ) {
             return this;
         }
 
         if (leftTerm instanceof  I) {
             return rightTerm;
-        }
-
-        if (leftTerm instanceof Succ) {
-            return new Application(
-                    new Function(new Nat(), new Nat()),
-                    new Nat(),
-                    leftTerm,
-                    rightTerm); // apply() ---  , move to L31
         }
 
         if (leftTerm instanceof Application) {

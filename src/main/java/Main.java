@@ -33,9 +33,7 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("K{Str}{Bool} xyz");
         //Preterm parseTree = Parser.createParseTree("K{Str}{Bool} xyz False");
 
-
-        //Ezt checkolni!
-        Preterm parseTree = Parser.createParseTree("(Succ (Succ (Rec{Nat} ZERO (K{Nat}{Nat} Succ:Nat->Nat) ZERO)))");
+        Preterm parseTree = Parser.createParseTree("(Succ (Succ (Rec{Nat} ZERO (K{Nat->Nat}{Nat} Succ:Nat->Nat) ZERO):Nat):Nat):Nat");
 
 
         //Preterm parseTree = Parser.createParseTree("K{Bool}{Str} True xyz");
