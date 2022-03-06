@@ -10,14 +10,6 @@ import java.util.Optional;
 
 public class Main {
     public static void main(String[] args) {
-        /*
-        ShallowSKI ski = new ShallowSKI() {
-            @Override
-            public void run() {
-                super.run();
-            }
-        };
-        ski.run();*/
 
         //Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool):Bool->Bool->Bool");
         //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool True");
@@ -31,7 +23,8 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K{Bool}{Bool} False)):Nat->Bool->Bool ZERO");
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K{}{Bool->Bool} (K{Bool}{Bool} False)) ZERO");
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K:Bool->Bool->Bool False)):Nat->Bool->Bool (Succ ZERO):Nat");
-        Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K{}{Bool->Bool} (K{Bool}{Bool} False)) (Succ (Succ ZERO):Nat):Nat");
+        //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K{}{Bool->Bool} (K{Bool}{Bool} False)) (Succ (Succ ZERO)"
+               // + ":Nat):Nat");
 
 
         //Preterm parseTree = Parser.createParseTree("K{Bool}{Str}");
@@ -39,6 +32,10 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("K{}{Str} True xyz");
         //Preterm parseTree = Parser.createParseTree("K{Str}{Bool} xyz");
         //Preterm parseTree = Parser.createParseTree("K{Str}{Bool} xyz False");
+
+
+        //Ezt checkolni!
+        Preterm parseTree = Parser.createParseTree("(Succ (Succ (Rec{Nat} ZERO (K{Nat}{Nat} Succ:Nat->Nat) ZERO)))");
 
 
         //Preterm parseTree = Parser.createParseTree("K{Bool}{Str} True xyz");
