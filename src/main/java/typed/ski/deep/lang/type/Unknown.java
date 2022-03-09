@@ -1,8 +1,6 @@
 package typed.ski.deep.lang.type;
 
-import typed.ski.deep.lang.preterm.Preterm;
-
-public class Unknown implements Preterm {
+public class Unknown implements PreType {
 
     private final int typeId;
 
@@ -12,5 +10,10 @@ public class Unknown implements Preterm {
 
     public int getTypeId() {
         return typeId;
+    }
+
+    @Override
+    public String toString() {
+        return "Unknown{" + typeId + "}";
     }
 }

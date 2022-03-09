@@ -1,15 +1,17 @@
-import org.apache.commons.lang3.tuple.Pair;
 import typed.ski.deep.evaluator.Evaluator;
 import typed.ski.deep.lang.preterm.Preterm;
 import typed.ski.deep.lang.term.Term;
-import typed.ski.deep.lang.type.PreType;
 import typed.ski.deep.parser.Parser;
 import typed.ski.deep.typechecker.TypeChecker;
 
-import java.util.Optional;
-
 public class Main {
     public static void main(String[] args) {
+
+        TypeChecker.infer(Parser.createParseTree("(K True False):Bool"))
+                .ifPresent(pair -> System.out.println(pair.toString()));
+        Preterm pt = Parser.createParseTree("K True False"); //Itt is meg kell még adni a típust, és AnnotatedTermeket implementálni
+        Term resultTerm = TypeChecker.createWellTypedTree(pt);
+        System.out.println(Evaluator.eval(resultTerm));
 
         //Preterm parseTree = Parser.createParseTree("(K:Bool->Bool->Bool):Bool->Bool->Bool");
         //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool True");
@@ -33,7 +35,7 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("K{Str}{Bool} xyz");
         //Preterm parseTree = Parser.createParseTree("K{Str}{Bool} xyz False");
 
-        Preterm parseTree = Parser.createParseTree("(Succ (Succ (Rec{Nat} ZERO (K{Nat->Nat}{Nat} Succ:Nat->Nat) ZERO):Nat):Nat):Nat");
+        //-------Preterm parseTree = Parser.createParseTree("(Succ (Succ (Rec{Nat} ZERO (K{Nat->Nat}{Nat} Succ:Nat->Nat) ZERO):Nat):Nat):Nat");
 
 
         //Preterm parseTree = Parser.createParseTree("K{Bool}{Str} True xyz");
@@ -50,9 +52,11 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("(K True):Bool->Bool False");
         //Preterm parseTree = Parser.createParseTree("I:Bool->Bool True");
         //Preterm parseTree = Parser.createParseTree("True:Bool");
-        Optional<Pair<Term, PreType>> wttOpt = TypeChecker.infer(parseTree);
+
+
+        /*Optional<Pair<Term, PreType>> wttOpt = TypeChecker.infer(parseTree);
         System.out.println(parseTree);
         System.out.println(wttOpt);
-        wttOpt.ifPresent(wtt -> System.out.println(Evaluator.eval(wtt.getLeft())));
+        wttOpt.ifPresent(wtt -> System.out.println(Evaluator.eval(wtt.getLeft())));*/
     }
 }

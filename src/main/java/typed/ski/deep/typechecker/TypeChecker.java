@@ -1,5 +1,6 @@
 package typed.ski.deep.typechecker;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.term.Application;
@@ -7,9 +8,182 @@ import typed.ski.deep.lang.term.Literal;
 import typed.ski.deep.lang.term.Term;
 import typed.ski.deep.lang.type.*;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TypeChecker {
+
+    private static final Map<Integer, PreType> unknownTypes = new HashMap<>();
+
+    public static Term createWellTypedTree(Preterm parseTree) {
+        unknownTypes.clear();
+
+        Optional<Pair<Term, PreType>> resultOptional = inferWithPreType(parseTree);
+        if (resultOptional.isPresent()) {
+            System.out.println(resultOptional.get().getRight());
+            System.out.println(resultOptional.get().getLeft());
+            return resultOptional.get().getLeft();
+        }
+        return null;
+    }
+
+    private static Optional<Pair<Term, PreType>> inferWithPreType(Preterm parseTree) {
+        int varCount = unknownTypes.size();
+
+        if (parseTree instanceof S) {
+            Unknown unknown1 = new Unknown(varCount++);
+            Unknown unknown2 = new Unknown(varCount++);
+            Unknown unknown3 = new Unknown(varCount);
+            insertIntoUnknownTypes(unknown1, unknown2, unknown3);
+
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(unknown1, unknown2, unknown3),
+                    new Function(new Function(unknown1, new Function(unknown2, unknown3)),
+                            new Function(new Function(unknown1, unknown2), new Function(unknown1, unknown3)))));
+        }
+
+        if (parseTree instanceof K) {
+            Unknown unknown1 = new Unknown(varCount++);
+            Unknown unknown2 = new Unknown(varCount);
+            insertIntoUnknownTypes(unknown1, unknown2);
+
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.K(unknown1, unknown2),
+                    new Function(unknown1, new Function(unknown2, unknown1))));
+        }
+
+        if (parseTree instanceof I) {
+            Unknown unknown1 = new Unknown(varCount);
+            insertIntoUnknownTypes(unknown1);
+
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.I(unknown1), new Function(unknown1, unknown1)));
+        }
+
+        if (parseTree instanceof True) {
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.True(), new Bool()));
+        }
+
+        if (parseTree instanceof False) {
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.False(), new Bool()));
+        }
+
+        if (parseTree instanceof App) {
+            Pair<Term, PreType> left = inferWithPreType(((App) parseTree).getLeftTerm()).orElseThrow();
+            Pair<Term, PreType> right = inferWithPreType(((App) parseTree).getRightTerm()).orElseThrow();
+
+            List<Pair<PreType, PreType>> typeEquations = new ArrayList<>();
+
+            if (left.getRight() instanceof Function) {
+                typeEquations.add(Pair.of(((Function) left.getRight()).getInputType(), right.getRight()));
+            }
+            else {
+                throw new IllegalStateException("Invalid types in application: " + left.getRight() + " " + right.getRight());
+            }
+
+            Map<Integer, PreType> resultTypes = unify(typeEquations, unknownTypes);
+
+            //--- Do it on higher level?
+            resultTypes.entrySet().stream()
+                    .filter(entry -> entry.getValue() instanceof Unknown)
+                    .findAny()
+                    .ifPresent(entry -> {
+                        throw new IllegalStateException("Could not resolve type of #" + entry.getKey() + ": " + entry.getValue());
+                    });
+
+            left.getLeft().substituteUnknownTypes(resultTypes);
+            right.getLeft().substituteUnknownTypes(resultTypes);
+
+            left = Pair.of(left.getLeft(), replaceTypeIfUnknown(left.getRight(), resultTypes));
+            right = Pair.of(right.getLeft(), replaceTypeIfUnknown(right.getRight(), resultTypes));
+
+            return Optional.of(Pair.of(new Application(left.getRight(), right.getRight(),
+                    left.getLeft(), right.getLeft()), ((Function) left.getRight()).getResultType()));
+        }
+
+        return Optional.empty();
+    }
+
+    private static PreType replaceTypeIfUnknown(PreType preType, Map<Integer, PreType> resolvedTypes) {
+        if (preType instanceof Unknown) {
+            return resolvedTypes.get(((Unknown) preType).getTypeId());
+        }
+        else if (preType instanceof Function) {
+            return new Function(replaceTypeIfUnknown(((Function) preType).getInputType(), resolvedTypes),
+                    replaceTypeIfUnknown(((Function) preType).getResultType(), resolvedTypes));
+        }
+        else {
+            return preType;
+        }
+    }
+
+    private static Map<Integer, PreType> unify(List<Pair<PreType, PreType>> typeEquations, Map<Integer, PreType> unknownTypes) {
+        Map<Integer, PreType> types = SerializationUtils.clone((HashMap<Integer, PreType>) unknownTypes);
+
+        if (!typeEquations.isEmpty()) {
+            Pair<PreType, PreType> pair = typeEquations.remove(0);
+
+            if (pair.getLeft() instanceof Unknown && pair.getRight() instanceof Unknown) {
+
+                if (((Unknown) pair.getLeft()).getTypeId() != ((Unknown) pair.getRight()).getTypeId()) {
+                    typeEquations.add(pair);
+                }
+
+                return unify(typeEquations, types);
+            }
+            else if (pair.getLeft() instanceof Function && pair.getRight() instanceof Function) {
+                typeEquations.add(Pair.of(((Function) pair.getLeft()).getInputType(), ((Function) pair.getRight()).getInputType()));
+                typeEquations.add(Pair.of(((Function) pair.getLeft()).getResultType(), ((Function) pair.getRight()).getResultType()));
+
+                return unify(typeEquations, types);
+            }
+            else if (pair.getLeft() instanceof Unknown || pair.getRight() instanceof Unknown) {
+                final Unknown unknown;
+                final Ty type;
+                if (pair.getLeft() instanceof Unknown) {
+                    unknown = (Unknown) pair.getLeft();
+                    type = (Ty) pair.getRight();
+                }
+                else {
+                    unknown = (Unknown) pair.getRight();
+                    type = (Ty) pair.getLeft();
+                }
+
+                typeEquations = typeEquations.stream()
+                        .map(entry -> {
+                            PreType left = entry.getLeft();
+                            PreType right = entry.getRight();
+
+                            if (entry.getLeft() instanceof Unknown && ((Unknown) entry.getLeft()).getTypeId() == unknown.getTypeId()) {
+                                left = type;
+                            }
+
+                            if (entry.getRight() instanceof Unknown && ((Unknown) entry.getRight()).getTypeId() == unknown.getTypeId()) {
+                                right = type;
+                            }
+
+                            return Pair.of(left, right);
+                        })
+                        .collect(Collectors.toList());
+
+                types.put(unknown.getTypeId(), type);
+
+                return unify(typeEquations, types);
+            }
+            else {
+                if (areTypesEqual(pair.getLeft(), pair.getRight())) {
+                    return unify(typeEquations, types);
+                }
+                else {
+                    throw new IllegalStateException("Not matching types: " + pair.getLeft() + ", " + pair.getRight());
+                }
+            }
+        }
+
+        return types;
+    }
+
+    private static void insertIntoUnknownTypes(Unknown... unknowns) {
+        Stream.of(unknowns).forEach(unknown -> unknownTypes.put(unknown.getTypeId(), unknown));
+    }
 
     public static Optional<Pair<Term, PreType>> infer(Preterm parseTree) {
         if (parseTree instanceof S || parseTree instanceof K || parseTree instanceof I || parseTree instanceof ITE ||

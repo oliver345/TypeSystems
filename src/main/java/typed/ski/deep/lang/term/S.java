@@ -1,14 +1,17 @@
 package typed.ski.deep.lang.term;
 
 import typed.ski.deep.lang.type.PreType;
+import typed.ski.deep.lang.type.Unknown;
+
+import java.util.Map;
 
 public class S implements Term {
 
-    private final PreType x;
+    private PreType x;
 
-    private final PreType y;
+    private PreType y;
 
-    private final PreType z;
+    private PreType z;
 
     public S(PreType x, PreType y, PreType z) {
         this.x = x;
@@ -31,5 +34,20 @@ public class S implements Term {
     @Override
     public String toString() {
         return "S[" + x + ", " + y + ", " + z + "]";
+    }
+
+    @Override
+    public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
+        if (x instanceof Unknown) {
+            x = resolvedTypes.get(((Unknown) x).getTypeId());
+        }
+
+        if (y instanceof Unknown) {
+            y = resolvedTypes.get(((Unknown) y).getTypeId());
+        }
+
+        if (z instanceof Unknown) {
+            z = resolvedTypes.get(((Unknown) z).getTypeId());
+        }
     }
 }

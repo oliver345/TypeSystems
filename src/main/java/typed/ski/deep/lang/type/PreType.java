@@ -1,4 +1,6 @@
 package typed.ski.deep.lang.type;
 
-public interface PreType {
+import java.io.Serializable;
+
+public interface PreType extends Serializable {
 }

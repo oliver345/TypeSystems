@@ -3,12 +3,15 @@ package typed.ski.deep.lang.term;
 import typed.ski.deep.lang.type.Function;
 import typed.ski.deep.lang.type.Nat;
 import typed.ski.deep.lang.type.PreType;
+import typed.ski.deep.lang.type.Unknown;
+
+import java.util.Map;
 
 public class Application implements Term {
 
-    private final PreType leftType;
+    private PreType leftType;
 
-    private final PreType rightType;
+    private PreType rightType;
 
     private final Term leftTerm;
 
@@ -114,5 +117,16 @@ public class Application implements Term {
     @Override
     public String toString() {
         return leftTerm + " " + rightTerm;
+    }
+
+    @Override
+    public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
+        if (leftType instanceof Unknown) {
+            leftType = resolvedTypes.get(((Unknown) leftType).getTypeId());
+        }
+
+        if (rightType instanceof Unknown) {
+            rightType = resolvedTypes.get(((Unknown) rightType).getTypeId());
+        }
     }
 }
