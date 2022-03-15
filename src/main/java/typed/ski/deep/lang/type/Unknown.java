@@ -2,7 +2,9 @@ package typed.ski.deep.lang.type;
 
 public class Unknown implements PreType {
 
-    private final int typeId;
+    private int typeId;
+
+    public Unknown() {}
 
     public Unknown(int typeId) {
         this.typeId = typeId;
@@ -10,6 +12,10 @@ public class Unknown implements PreType {
 
     public int getTypeId() {
         return typeId;
+    }
+
+    public void setTypeId(int typeId) {
+        this.typeId = typeId;
     }
 
     @Override

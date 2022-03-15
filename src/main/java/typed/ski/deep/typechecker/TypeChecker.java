@@ -14,18 +14,29 @@ import java.util.stream.Stream;
 
 public class TypeChecker {
 
-    private static final Map<Integer, PreType> unknownTypes = new HashMap<>();
+    private static Map<Integer, PreType> unknownTypes = new HashMap<>();
 
     public static Term createWellTypedTree(Preterm parseTree) {
         unknownTypes.clear();
 
         Optional<Pair<Term, PreType>> resultOptional = inferWithPreType(parseTree);
         if (resultOptional.isPresent()) {
+
+            String unknownIds = unknownTypes.entrySet().stream()
+                    .filter(entry -> entry.getValue() instanceof Unknown)
+                    .map(entry -> entry.getKey().toString())
+                    .collect(Collectors.joining(", "));
+            if (!unknownIds.isEmpty()) {
+                throw new IllegalStateException("Could not resolve the type of type-ID(s): " + unknownIds);
+            }
+
             System.out.println(resultOptional.get().getRight());
             System.out.println(resultOptional.get().getLeft());
             return resultOptional.get().getLeft();
         }
         return null;
+
+        //dobjon errort ha empty, ne nullal térjen vissza
     }
 
     private static Optional<Pair<Term, PreType>> inferWithPreType(Preterm parseTree) {
@@ -37,9 +48,42 @@ public class TypeChecker {
             Unknown unknown3 = new Unknown(varCount);
             insertIntoUnknownTypes(unknown1, unknown2, unknown3);
 
-            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(unknown1, unknown2, unknown3),
+            //--- unknown 1 v 3?
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(new Function(unknown1, new Function(unknown2, unknown3)), new Function(unknown1, unknown2), unknown1),
                     new Function(new Function(unknown1, new Function(unknown2, unknown3)),
                             new Function(new Function(unknown1, unknown2), new Function(unknown1, unknown3)))));
+
+            /*return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(unknown1, unknown2, unknown3),
+                    new Function(new Function(unknown1, new Function(unknown2, unknown3)),
+                            new Function(new Function(unknown1, unknown2), new Function(unknown1, unknown3)))));*/
+        }
+
+        if (parseTree instanceof S_ABC) {
+            List<Unknown> unknowns = new ArrayList<>();
+
+            PreType a = ((S_ABC) parseTree).getA();
+            PreType b = ((S_ABC) parseTree).getB();
+            PreType c = ((S_ABC) parseTree).getC();
+
+            if (a instanceof Unknown) {
+                ((Unknown) a).setTypeId(varCount++);
+                unknowns.add((Unknown) a);
+            }
+
+            if (b instanceof Unknown) {
+                ((Unknown) b).setTypeId(varCount++);
+                unknowns.add((Unknown) b);
+            }
+
+            if (c instanceof Unknown) {
+                ((Unknown) c).setTypeId(varCount);
+                unknowns.add((Unknown) c);
+            }
+
+            insertIntoUnknownTypes(unknowns.toArray(new Unknown[0]));
+
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(new Function(a, new Function(b, c)), new Function(a, b), a),
+                    new Function(new Function(a, new Function(b, c)), new Function(new Function(a, b), new Function(a, c)))));
         }
 
         if (parseTree instanceof K) {
@@ -51,11 +95,42 @@ public class TypeChecker {
                     new Function(unknown1, new Function(unknown2, unknown1))));
         }
 
-        if (parseTree instanceof I) {
-            Unknown unknown1 = new Unknown(varCount);
-            insertIntoUnknownTypes(unknown1);
+        if (parseTree instanceof K_A) {
+            Unknown unknown = new Unknown(varCount);
+            insertIntoUnknownTypes(unknown);
 
-            return Optional.of(Pair.of(new typed.ski.deep.lang.term.I(unknown1), new Function(unknown1, unknown1)));
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.K(((K_A) parseTree).getA(), unknown),
+                    new Function(((K_A) parseTree).getA(), new Function(unknown, ((K_A) parseTree).getA()))));
+        }
+
+        if (parseTree instanceof K_B) {
+            Unknown unknown = new Unknown(varCount);
+            insertIntoUnknownTypes(unknown);
+
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.K(unknown, ((K_B) parseTree).getB()),
+                    new Function(unknown, new Function(((K_B) parseTree).getB(), unknown))));
+        }
+
+        if (parseTree instanceof K_AB) {
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.K(((K_AB) parseTree).getA(), ((K_AB) parseTree).getB()),
+                    new Function(((K_AB) parseTree).getA(), new Function(((K_AB) parseTree).getB(), ((K_AB) parseTree).getA()))));
+        }
+
+        if (parseTree instanceof I) {
+            Unknown unknown = new Unknown(varCount);
+            insertIntoUnknownTypes(unknown);
+
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.I(unknown), new Function(unknown, unknown)));
+        }
+
+        if (parseTree instanceof I_A) {
+            PreType type = ((I_A) parseTree).getA();
+            if (type instanceof Unknown) {
+                ((Unknown) type).setTypeId(varCount);
+                unknownTypes.put(varCount, type);
+            }
+
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.I(type), new Function(type, type)));
         }
 
         if (parseTree instanceof True) {
@@ -79,24 +154,39 @@ public class TypeChecker {
                 throw new IllegalStateException("Invalid types in application: " + left.getRight() + " " + right.getRight());
             }
 
-            Map<Integer, PreType> resultTypes = unify(typeEquations, unknownTypes);
+            unknownTypes = unify(typeEquations, unknownTypes);
 
-            //--- Do it on higher level?
-            resultTypes.entrySet().stream()
-                    .filter(entry -> entry.getValue() instanceof Unknown)
-                    .findAny()
-                    .ifPresent(entry -> {
-                        throw new IllegalStateException("Could not resolve type of #" + entry.getKey() + ": " + entry.getValue());
-                    });
+            left.getLeft().substituteUnknownTypes(unknownTypes);
+            right.getLeft().substituteUnknownTypes(unknownTypes);
 
-            left.getLeft().substituteUnknownTypes(resultTypes);
-            right.getLeft().substituteUnknownTypes(resultTypes);
-
-            left = Pair.of(left.getLeft(), replaceTypeIfUnknown(left.getRight(), resultTypes));
-            right = Pair.of(right.getLeft(), replaceTypeIfUnknown(right.getRight(), resultTypes));
+            left = Pair.of(left.getLeft(), replaceTypeIfUnknown(left.getRight(), unknownTypes));
+            right = Pair.of(right.getLeft(), replaceTypeIfUnknown(right.getRight(), unknownTypes));
 
             return Optional.of(Pair.of(new Application(left.getRight(), right.getRight(),
                     left.getLeft(), right.getLeft()), ((Function) left.getRight()).getResultType()));
+        }
+
+        if (parseTree instanceof AnnotatedPreterm) {
+
+            Optional<Pair<Term, PreType>> inferredOptional = inferWithPreType(((AnnotatedPreterm) parseTree).getPreterm());
+            if (inferredOptional.isPresent()) {
+                Pair<Term, PreType> pair = inferredOptional.get();
+
+                List<Pair<PreType, PreType>> typeEquations = new ArrayList<>();
+                typeEquations.add(Pair.of(pair.getRight(), ((AnnotatedPreterm) parseTree).getType()));
+
+                unknownTypes = unify(typeEquations, unknownTypes);
+                pair.getLeft().substituteUnknownTypes(unknownTypes);
+
+                //---Be kell helyettesíteni az inferredType-ba, vagy elég csak parsTree.type-ot visszadni?
+                return Optional.of(Pair.of(pair.getLeft(), replaceTypeIfUnknown(pair.getRight(), unknownTypes)));
+            }
+
+            throw new IllegalStateException("Could not infer term: " + ((AnnotatedPreterm) parseTree).getPreterm());
+        }
+
+        if (parseTree instanceof Lit) {
+            return Optional.of(Pair.of(new Literal(((Lit) parseTree).getName()), new Str()));
         }
 
         return Optional.empty();
@@ -123,9 +213,10 @@ public class TypeChecker {
 
             if (pair.getLeft() instanceof Unknown && pair.getRight() instanceof Unknown) {
 
+                /* ---
                 if (((Unknown) pair.getLeft()).getTypeId() != ((Unknown) pair.getRight()).getTypeId()) {
                     typeEquations.add(pair);
-                }
+                }*/
 
                 return unify(typeEquations, types);
             }
@@ -269,7 +360,6 @@ public class TypeChecker {
             return Optional.empty();
         }
 
-        //Check ---
         if (parseTree instanceof Lit) {
             return Optional.of(Pair.of(new Literal(((Lit) parseTree).getName()), new Str()));
         }
@@ -313,6 +403,7 @@ public class TypeChecker {
                     }
 
                     //return new WellTypedTree(new typed.ski.deep.lang.term.S(A, B, C), null);
+                    //--- S 3. típusa inkább A,   compareTo ShallowSki.S()
                     return Optional.of(new typed.ski.deep.lang.term.S(new Function(A, new Function(B, C)), new Function(A, B), C));
                 }
             }

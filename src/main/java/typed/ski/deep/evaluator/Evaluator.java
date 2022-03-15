@@ -16,6 +16,6 @@ public class Evaluator {
                     eval(((Application) wtt).getLeftTerm()), eval(((Application) wtt).getRightTerm())).apply();
         }
 
-        throw new IllegalStateException();
+        throw new IllegalStateException("Could not evaluate term: " + wtt);
     }
 }
