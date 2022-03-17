@@ -114,7 +114,19 @@ public class Parser {
             int indexOfColon = token.indexOf(":");
             return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon)), parseType(token.substring(indexOfColon + 1)));
         }
-        else if (token.startsWith("S")) {
+        else if (token.equals("S") || (token.startsWith("S") && token.contains("}{"))) {
+            if (token.equals("S")) {
+                return new S();
+            }
+            else {
+                String[] parts = token.split("}\\{");
+                return new S_ABC(
+                        parsePreType(parts[0].substring(2)),
+                        parsePreType(parts[1]),
+                        parsePreType(parts[2].substring(0, parts[2].length() - 1)));
+            }
+        }
+        /*else if (token.startsWith("S")) {
             if (token.equals("S")) {
                 return new S();
             }
@@ -128,8 +140,8 @@ public class Parser {
             else {
                 throw new IllegalStateException("Token could not be parsed as any kind of S preterm: " + token);
             }
-        }
-        else if (token.startsWith("K")) {
+        }*/
+        /*else if (token.startsWith("K")) {
             if (token.equals("K")) {
                 return new K();
             }
@@ -151,17 +163,33 @@ public class Parser {
             else {
                 throw new IllegalStateException("Token could not be parsed as any kind of K preterm: " + token);
             }
-        }
-        else if (token.startsWith("Rec") && token.endsWith("}")) {
-            int pos = token.indexOf("{");
-            if (pos > 0) {
-                return new Rec(parseType(token.substring(pos + 1, token.length() - 1)));
+        }*/
+        else if (token.equals("K") || (token.startsWith("K") && token.contains("}{"))) {
+            if (token.equals("K")) {
+                return new K();
             }
             else {
-                throw new IllegalStateException("Invalid expression: " + token);
+                String[] parts = token.split("}\\{");
+                return new K_AB(parsePreType(parts[0].substring(2)), parsePreType(parts[1].substring(0, parts[1].length() - 1)));
             }
         }
-        else if (token.startsWith("I")) {
+        else if (token.equals("Rec") || (token.startsWith("Rec") && token.endsWith("}"))) {
+            if (token.equals("Rec")) {
+                return new Rec();
+            }
+            else {
+                return new Rec_A(parsePreType(token.substring(token.indexOf("{") + 1, token.indexOf("}"))));
+            }
+        }
+        else if (token.equals("I") || (token.startsWith("I") && token.contains("{"))) {
+            if (token.equals("I")) {
+                return new I();
+            }
+            else {
+                return new I_A(parsePreType(token.substring(2, token.length() - 1)));
+            }
+        }
+        /*else if (token.startsWith("I")) {
             if (token.equals("I")) {
                 return new I();
             }
@@ -171,7 +199,7 @@ public class Parser {
             else {
                 throw new IllegalStateException("Token could not be parsed as any kind of I preterm: " + token);
             }
-        }
+        }*/
         else if (token.equals("True")) {
             return new True();
         }

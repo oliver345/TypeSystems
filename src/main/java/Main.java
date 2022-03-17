@@ -19,7 +19,15 @@ public class Main {
         //Preterm pt = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool True");
         //Preterm pt = Parser.createParseTree("(S K (K True) False):Bool");
         //Preterm pt = Parser.createParseTree("S{Bool}{Bool}{Bool} K I True");
-        Preterm pt = Parser.createParseTree("I");
+        Preterm pt = Parser.createParseTree("S K{Bool}{Bool} I True");
+        //Preterm pt = Parser.createParseTree("K{}{Bool}:Str->Bool->Str");
+        //Preterm pt = Parser.createParseTree("Succ ZERO");
+        //Preterm pt = Parser.createParseTree("ITE False ZERO (Succ ZERO)");
+        //Preterm pt = Parser.createParseTree("Rec{Bool} True (K (K False):Bool->Bool):Nat->Bool->Bool (Succ (Succ ZERO))");
+        //Preterm pt = Parser.createParseTree("Rec{Bool} True (K (K False):Bool->Bool):Nat->Bool->Bool ZERO");
+        //Preterm pt = Parser.createParseTree("Rec{Bool} True (K{}{Nat} (K{}{Bool} False)) ZERO");
+        //Preterm pt = Parser.createParseTree("Rec{} True (K (K False)) ZERO");
+        //Preterm pt = Parser.createParseTree("Rec True (K (K False)) ZERO");
         Term resultTerm = TypeChecker.createWellTypedTree(pt);
         System.out.println(Evaluator.eval(resultTerm));
 
@@ -27,13 +35,14 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool True");
         // ==>
         //Preterm parseTree = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool (K:Bool->Bool->Bool True False)");
-        Preterm parseTree = Parser.createParseTree("(S K{Bool}{Bool} (K True):Bool->Bool False):Bool");
+        //Preterm parseTree = Parser.createParseTree("(S K{Bool}{Bool} (K True):Bool->Bool False):Bool");
+        //Preterm parseTree = Parser.createParseTree("K{}{Bool}:Str->Bool->Str");
+        //Clear unknown map!!!
 
         //isZero
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K:Bool->Bool->Bool False)):Nat->Bool->Bool ZERO");
-        //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K False):Bool->Bool):Nat->Bool->Bool ZERO");
+        Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K False):Bool->Bool):Nat->Bool->Bool ZERO");
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K{Bool}{Bool} False)):Nat->Bool->Bool ZERO");
-        //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K{}{Bool->Bool} (K{Bool}{Bool} False)) ZERO");
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K:Bool->Bool->Bool False)):Nat->Bool->Bool (Succ ZERO):Nat");
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K{}{Bool->Bool} (K{Bool}{Bool} False)) (Succ (Succ ZERO)"
                // + ":Nat):Nat");

@@ -1,9 +1,10 @@
 package typed.ski.deep.lang.term;
 
 import typed.ski.deep.lang.type.PreType;
-import typed.ski.deep.lang.type.Unknown;
 
 import java.util.Map;
+
+import static typed.ski.deep.typechecker.TypeChecker.replaceTypeIfUnknown;
 
 public class K implements Term {
 
@@ -31,12 +32,7 @@ public class K implements Term {
 
     @Override
     public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
-        if (x instanceof Unknown) {
-            x = resolvedTypes.get(((Unknown) x).getTypeId());
-        }
-
-        if (y instanceof Unknown) {
-            y = resolvedTypes.get(((Unknown) y).getTypeId());
-        }
+        x = replaceTypeIfUnknown(x, resolvedTypes);
+        y = replaceTypeIfUnknown(y, resolvedTypes);
     }
 }

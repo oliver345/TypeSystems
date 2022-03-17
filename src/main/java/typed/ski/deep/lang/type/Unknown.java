@@ -4,7 +4,9 @@ public class Unknown implements PreType {
 
     private int typeId;
 
-    public Unknown() {}
+    public Unknown() {
+        typeId = -1;
+    }
 
     public Unknown(int typeId) {
         this.typeId = typeId;
