@@ -61,10 +61,12 @@ public class Application implements Term {
             if (subApplication.getLeftTerm() instanceof Application) {
                 if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof S) {
                     S termS = (S) ((Application) subApplication.getLeftTerm()).getLeftTerm();
-                    return new Application(((Function) termS.getX()).getResultType(), ((Function) termS.getY()).getResultType(),
-                            new Application(termS.getX(), termS.getZ(),
+
+                    return new Application(new Function(termS.getY(), termS.getZ()), termS.getY(),
+                            new Application(((Application) subApplication.getLeftTerm()).getRightType(), rightType,
                                     ((Application) subApplication.getLeftTerm()).getRightTerm(), rightTerm).apply(),
-                            new Application(termS.getY(), termS.getZ(), subApplication.getRightTerm(), rightTerm).apply()).apply();
+                            new Application(subApplication.getRightType(), rightType,
+                                    subApplication.getRightTerm(), rightTerm).apply()).apply();
                 }
 
                 if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof ITE) {
@@ -77,7 +79,6 @@ public class Application implements Term {
                     if (rightTerm instanceof ZERO) {
                         return termZ;
                     }
-                    //rightTerm == Succ n
                     else if (rightTerm instanceof Application) {
                         Rec termRec = (Rec) ((Application) subApplication.getLeftTerm()).getLeftTerm();
                         PreType recTypeParam = termRec.getX();

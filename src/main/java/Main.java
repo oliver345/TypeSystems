@@ -19,7 +19,7 @@ public class Main {
         //Preterm pt = Parser.createParseTree("S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool True");
         //Preterm pt = Parser.createParseTree("(S K (K True) False):Bool");
         //Preterm pt = Parser.createParseTree("S{Bool}{Bool}{Bool} K I True");
-        Preterm pt = Parser.createParseTree("S K{Bool}{Bool} I True");
+        Preterm pt = Parser.createParseTree("S K I True");
         //Preterm pt = Parser.createParseTree("K{}{Bool}:Str->Bool->Str");
         //Preterm pt = Parser.createParseTree("Succ ZERO");
         //Preterm pt = Parser.createParseTree("ITE False ZERO (Succ ZERO)");

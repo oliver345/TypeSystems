@@ -201,28 +201,15 @@ public class TypeChecker {
     private static Optional<Pair<Term, PreType>> inferWithPreType(Preterm parseTree) {
         int varCount = unknownTypes.size();
 
-        /*
-        S-nek 3 különböző típusa van , A, B, C, lehetnek különbözőek, unknown 1-3
-        return new S(A, B, C) , de a típusa maradjon ahogy most van
-         */
         if (parseTree instanceof S) {
             Unknown unknown1 = new Unknown(varCount++);
             Unknown unknown2 = new Unknown(varCount++);
             Unknown unknown3 = new Unknown(varCount);
             insertIntoUnknownTypes(unknown1, unknown2, unknown3);
 
-            //--- unknown 1 v 3?
-            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(new Function(unknown1, new Function(unknown2, unknown3)), new Function(unknown1, unknown2), unknown1),
-            //return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(unknown1, unknown2, unknown3),
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(unknown1, unknown2, unknown3),
                     new Function(new Function(unknown1, new Function(unknown2, unknown3)),
                             new Function(new Function(unknown1, unknown2), new Function(unknown1, unknown3)))));
-
-
-
-
-            /*return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(unknown1, unknown2, unknown3),
-                    new Function(new Function(unknown1, new Function(unknown2, unknown3)),
-                            new Function(new Function(unknown1, unknown2), new Function(unknown1, unknown3)))));*/
         }
 
         if (parseTree instanceof S_ABC) {
@@ -249,7 +236,7 @@ public class TypeChecker {
 
             insertIntoUnknownTypes(unknowns.toArray(new Unknown[0]));
 
-            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(new Function(a, new Function(b, c)), new Function(a, b), a),
+            return Optional.of(Pair.of(new typed.ski.deep.lang.term.S(a, b, c),
                     new Function(new Function(a, new Function(b, c)), new Function(new Function(a, b), new Function(a, c)))));
         }
 
@@ -331,12 +318,12 @@ public class TypeChecker {
 
             List<Pair<PreType, PreType>> typeEquations = new ArrayList<>();
 
-            if (left.getRight() instanceof Function) {
-                typeEquations.add(Pair.of(((Function) left.getRight()).getInputType(), right.getRight()));
-            }
-            else {
-                throw new IllegalStateException("Invalid types in application: " + left.getRight() + " " + right.getRight());
-            }
+            //The size of the list must be queried again, the inferWithPreType() calls could change it
+            Unknown uknResultType = new Unknown(unknownTypes.size());
+            insertIntoUnknownTypes(uknResultType);
+
+            Function expectedFuncType = new Function(right.getRight(), uknResultType);
+            typeEquations.add(Pair.of(left.getRight(), expectedFuncType));
 
             unknownTypes = unify(typeEquations, unknownTypes);
 
@@ -347,7 +334,7 @@ public class TypeChecker {
             right = Pair.of(right.getLeft(), replaceTypeIfUnknown(right.getRight(), unknownTypes));
 
             return Optional.of(Pair.of(new Application(left.getRight(), right.getRight(),
-                    left.getLeft(), right.getLeft()), ((Function) left.getRight()).getResultType()));
+                    left.getLeft(), right.getLeft()), replaceTypeIfUnknown(expectedFuncType.getResultType(), unknownTypes)));
         }
 
         if (parseTree instanceof AnnotatedPreterm) {
@@ -414,67 +401,83 @@ public class TypeChecker {
         Map<Integer, PreType> types = SerializationUtils.clone((HashMap<Integer, PreType>) unknownTypes);
 
         if (!typeEquations.isEmpty()) {
-            Pair<PreType, PreType> pair = typeEquations.remove(0);
+            Pair<PreType, PreType> pair = typeEquations.remove(typeEquations.size() - 1);
 
-            if (pair.getLeft() instanceof Unknown && pair.getRight() instanceof Unknown) {
-
-                /* ---
-                if (((Unknown) pair.getLeft()).getTypeId() != ((Unknown) pair.getRight()).getTypeId()) {
-                    typeEquations.add(pair);
-                }*/
-
-                return unify(typeEquations, types);
-            }
-            else if (pair.getLeft() instanceof Function && pair.getRight() instanceof Function) {
-                typeEquations.add(Pair.of(((Function) pair.getLeft()).getInputType(), ((Function) pair.getRight()).getInputType()));
-                typeEquations.add(Pair.of(((Function) pair.getLeft()).getResultType(), ((Function) pair.getRight()).getResultType()));
-
-                return unify(typeEquations, types);
-            }
-            else if (pair.getLeft() instanceof Unknown || pair.getRight() instanceof Unknown) {
+            if (pair.getLeft() instanceof Unknown || pair.getRight() instanceof Unknown) {
                 final Unknown unknown;
-                final Ty type;
+                final PreType preType;
                 if (pair.getLeft() instanceof Unknown) {
                     unknown = (Unknown) pair.getLeft();
-                    type = (Ty) pair.getRight();
+                    preType = pair.getRight();
                 }
                 else {
                     unknown = (Unknown) pair.getRight();
-                    type = (Ty) pair.getLeft();
+                    preType = pair.getLeft();
                 }
 
-                typeEquations = typeEquations.stream()
-                        .map(entry -> {
-                            PreType left = entry.getLeft();
-                            PreType right = entry.getRight();
+                if (!doesPretypeContainsUnknown(preType, unknown)) {
+                    typeEquations = typeEquations.stream()
+                            .map(entry -> {
+                                PreType left = entry.getLeft();
+                                PreType right = entry.getRight();
 
-                            if (entry.getLeft() instanceof Unknown && ((Unknown) entry.getLeft()).getTypeId() == unknown.getTypeId()) {
-                                left = type;
-                            }
+                                if (doesPretypeContainsUnknown(left, unknown)) {
+                                    left = substituteUnknownInPretypeWithType(left, unknown, preType);
+                                }
+                                if (doesPretypeContainsUnknown(right, unknown)) {
+                                    right = substituteUnknownInPretypeWithType(right, unknown, preType);
+                                }
+                                return Pair.of(left, right);
+                            })
+                            .collect(Collectors.toList());
+                }
+                else {
+                    throw new IllegalStateException("Could not apply unify rule, one type contains the unknown type\n" +
+                            preType + ", " + unknown);
+                }
 
-                            if (entry.getRight() instanceof Unknown && ((Unknown) entry.getRight()).getTypeId() == unknown.getTypeId()) {
-                                right = type;
-                            }
-
-                            return Pair.of(left, right);
-                        })
-                        .collect(Collectors.toList());
-
-                types.put(unknown.getTypeId(), type);
+                types.put(unknown.getTypeId(), preType);
+                types = types.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> substituteUnknownInPretypeWithType(entry.getValue(), unknown, preType)));
+                return unify(typeEquations, types);
+            }
+            else if (pair.getLeft() instanceof Function && pair.getRight() instanceof Function) {
+                typeEquations.add(Pair.of(((Function) pair.getLeft()).getResultType(), ((Function) pair.getRight()).getResultType()));
+                typeEquations.add(Pair.of(((Function) pair.getLeft()).getInputType(), ((Function) pair.getRight()).getInputType()));
 
                 return unify(typeEquations, types);
             }
-            else {
-                if (areTypesEqual(pair.getLeft(), pair.getRight())) {
-                    return unify(typeEquations, types);
-                }
-                else {
-                    throw new IllegalStateException("Not matching types: " + pair.getLeft() + ", " + pair.getRight());
-                }
+            else if (areTypesEqual(pair.getLeft(), pair.getRight())) {
+                return unify(typeEquations, types);
+            } else {
+                throw new IllegalStateException("Not matching types: " + pair.getLeft() + ", " + pair.getRight());
             }
         }
 
         return types;
+    }
+
+    private static boolean doesPretypeContainsUnknown(PreType preType, Unknown unknown) {
+        if (preType instanceof Unknown) {
+            return ((Unknown) preType).getTypeId() == unknown.getTypeId();
+        }
+        else if (preType instanceof Function) {
+            return doesPretypeContainsUnknown(((Function) preType).getInputType(), unknown) || doesPretypeContainsUnknown(((Function) preType).getResultType(), unknown);
+        }
+        return false;
+    }
+
+    private static PreType substituteUnknownInPretypeWithType(PreType preType, Unknown unknown, PreType replaceWith) {
+        if (preType instanceof Unknown && ((Unknown) preType).getTypeId() == unknown.getTypeId()) {
+            return replaceWith;
+        }
+        else if (preType instanceof Function) {
+            return new Function(substituteUnknownInPretypeWithType(((Function) preType).getInputType(), unknown, replaceWith),
+                    substituteUnknownInPretypeWithType(((Function) preType).getResultType(), unknown, replaceWith));
+        }
+        else {
+            return preType;
+        }
     }
 
     private static void insertIntoUnknownTypes(Unknown... unknowns) {
@@ -517,8 +520,7 @@ public class TypeChecker {
                         return Optional.empty();
                     }
 
-                    //--- ABC AB A ?
-                    return Optional.of(new typed.ski.deep.lang.term.S(new Function(A, new Function(B, C)), new Function(A, B), C));
+                    return Optional.of(new typed.ski.deep.lang.term.S(A, B, C));
                 }
             }
         }
