@@ -3,10 +3,7 @@ package typed.ski.deep.parser;
 import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.type.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -16,7 +13,7 @@ public class Parser {
 
     private static final String TEXT_IN_BRACKETS_PATTERN = "\\([^)]*\\)";
 
-    public static Preterm createParseTree(String input) {
+    public static Preterm createParseTree(String input, Map<String, Preterm> definitions) {
         List<Preterm> preterms = new ArrayList<>();
 
         int pos = 0;
@@ -25,9 +22,9 @@ public class Parser {
         while (pos < input.length()) {
             if (input.charAt(pos) == '(') {
                 if (isInAnnotatedTerm(input, pos)) {
-                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms);
+                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms, definitions);
                     int closingPos = findClosingBracket(input, pos + 1);
-                    Preterm term = createParseTree(input.substring(pos + 1, closingPos));
+                    Preterm term = createParseTree(input.substring(pos + 1, closingPos), definitions);
 
                     int spaceDistance = input.substring(closingPos + 2).indexOf(" ");
                     String type;
@@ -45,8 +42,8 @@ public class Parser {
                 }
                 else if(!isItInAFunction(input, pos)) {
                     int closingPos = findClosingBracket(input, pos + 1);
-                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms);
-                    preterms.add(createParseTree(input.substring(pos + 1, closingPos)));
+                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms, definitions);
+                    preterms.add(createParseTree(input.substring(pos + 1, closingPos), definitions));
                     firstNotProcessedPos = closingPos + 1;
                     pos = closingPos + 1;
                 }
@@ -60,7 +57,7 @@ public class Parser {
         }
 
         if (firstNotProcessedPos < input.length()) {
-            appendToListAsPreterms(input.substring(firstNotProcessedPos), preterms);
+            appendToListAsPreterms(input.substring(firstNotProcessedPos), preterms, definitions);
         }
 
         return preterms.size() == 1 ? preterms.get(0) : preterms.stream().reduce(App::new).orElseThrow();
@@ -98,9 +95,9 @@ public class Parser {
     }
 
     //String without brackets -> tokens -> Preterm -> append one by one
-    private static void appendToListAsPreterms(String input, List<Preterm> preterms) {
+    private static void appendToListAsPreterms(String input, List<Preterm> preterms, Map<String, Preterm> definitions) {
         List<String> tokens = getTokens(input);
-        tokens.forEach(token -> preterms.add(tokenToPreterm(token)));
+        tokens.forEach(token -> preterms.add(tokenToPreterm(token, definitions)));
     }
 
     private static List<String> getTokens(String input) {
@@ -109,10 +106,10 @@ public class Parser {
                 .collect(Collectors.toList());
     }
 
-    private static Preterm tokenToPreterm(String token) {
+    private static Preterm tokenToPreterm(String token, Map<String, Preterm> definitions) {
         if (token.contains(":")) {
             int indexOfColon = token.indexOf(":");
-            return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon)), parseType(token.substring(indexOfColon + 1)));
+            return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon), definitions), parseType(token.substring(indexOfColon + 1)));
         }
         else if (token.equals("S") || (token.startsWith("S") && token.contains("}{"))) {
             if (token.equals("S")) {
@@ -214,6 +211,9 @@ public class Parser {
         }
         else if (token.equals("ZERO")) {
             return new ZERO();
+        }
+        else if (definitions.containsKey(token)) {
+            return definitions.get(token);
         }
         else {
             return new Lit(token);

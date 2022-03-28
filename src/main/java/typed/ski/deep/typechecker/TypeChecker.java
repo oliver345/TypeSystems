@@ -30,8 +30,6 @@ public class TypeChecker {
                 throw new IllegalStateException("Could not resolve the type of type-ID(s): " + unknownIds);
             }
 
-            System.out.println(resultOptional.get().getRight());
-            System.out.println(resultOptional.get().getLeft());
             return resultOptional.get().getLeft();
         }
         return null;
