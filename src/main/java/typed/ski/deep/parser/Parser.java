@@ -123,44 +123,6 @@ public class Parser {
                         parsePreType(parts[2].substring(0, parts[2].length() - 1)));
             }
         }
-        /*else if (token.startsWith("S")) {
-            if (token.equals("S")) {
-                return new S();
-            }
-            else if (token.contains("}{")){
-                String[] parts = token.split("}\\{");
-                return new S_ABC(
-                        parsePreType(parts[0].substring(2)),
-                        parsePreType(parts[1]),
-                        parsePreType(parts[2].substring(0, parts[2].length() - 1)));
-            }
-            else {
-                throw new IllegalStateException("Token could not be parsed as any kind of S preterm: " + token);
-            }
-        }*/
-        /*else if (token.startsWith("K")) {
-            if (token.equals("K")) {
-                return new K();
-            }
-            else if (token.contains("}{")){
-                String[] parts = token.split("}\\{");
-                String part1 = parts[0].substring(2);
-                String part2 = parts[1].substring(0, parts[1].length() - 1);
-                if (!part1.isEmpty() && !part2.isEmpty()) {
-                    return new K_AB(parseType(part1), parseType(part2));
-                }
-                else if (!part1.isEmpty()) {
-                    return new K_A(parseType(part1));
-                }
-                else if (!part2.isEmpty()) {
-                    return new K_B(parseType(part2));
-                }
-                throw new IllegalStateException("No implicit types were given to K: " + token);
-            }
-            else {
-                throw new IllegalStateException("Token could not be parsed as any kind of K preterm: " + token);
-            }
-        }*/
         else if (token.equals("K") || (token.startsWith("K") && token.contains("}{"))) {
             if (token.equals("K")) {
                 return new K();
@@ -186,17 +148,6 @@ public class Parser {
                 return new I_A(parsePreType(token.substring(2, token.length() - 1)));
             }
         }
-        /*else if (token.startsWith("I")) {
-            if (token.equals("I")) {
-                return new I();
-            }
-            else if (token.contains("{")) {
-                return new I_A(parsePreType(token.substring(2, token.length() - 1)));
-            }
-            else {
-                throw new IllegalStateException("Token could not be parsed as any kind of I preterm: " + token);
-            }
-        }*/
         else if (token.equals("True")) {
             return new True();
         }

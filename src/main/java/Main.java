@@ -1,4 +1,10 @@
+import org.apache.commons.lang3.tuple.Pair;
 import typed.ski.deep.SKI;
+import typed.ski.deep.evaluator.Evaluator;
+import typed.ski.deep.parser.Parser;
+import typed.ski.deep.typechecker.TypeChecker;
+
+import java.util.Collections;
 
 public class Main {
     public static void main(String[] args) {
@@ -44,8 +50,7 @@ public class Main {
         //           parseTree = Parser.createParseTree("Rec{Bool} True (K (K False):Bool->Bool):Nat->Bool->Bool ZERO");
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K{Bool}{Bool} False)):Nat->Bool->Bool ZERO");
         //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K (K:Bool->Bool->Bool False)):Nat->Bool->Bool (Succ ZERO):Nat");
-        //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K{}{Bool->Bool} (K{Bool}{Bool} False)) (Succ (Succ ZERO)"
-               // + ":Nat):Nat");
+        //Preterm parseTree = Parser.createParseTree("Rec{Bool} True (K{}{Bool->Bool} (K{Bool}{Bool} False)) (Succ (Succ ZERO):Nat):Nat");
 
 
         //Preterm parseTree = Parser.createParseTree("(S K:Bool->Bool->Bool (K True):Bool->Bool False):Bool");
@@ -74,6 +79,23 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("I:Bool->Bool True");
         //Preterm parseTree = Parser.createParseTree("True:Bool");
 
+        System.out.println("teszt");
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("((Succ ZERO):Nat):Nat", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(SKI.executeCodeLine("Rec True (K (K:Bool->Bool->Bool False)):Nat->Bool->Bool ZERO", Collections.emptyMap()));
+
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("Rec True (K (K:Bool->Bool->Bool False)):Nat->Bool->Bool ZERO", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("K{}{Str} True", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("S{}{Bool}{Bool} K:Bool->Bool->Bool I:Bool->Bool (K:Bool->Bool->Bool True False)", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("S{}{Bool}{Bool} K{Bool}{Bool} I:Bool->Bool (K:Bool->Bool->Bool True False)", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("(K{}{}):Bool->Bool->Bool", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("(I{}):Bool->Bool", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("I{}:Bool->Bool", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("S{Bool}{Bool}{Bool}:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("S{}{Bool}{}:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("S K I True", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("K (K False) ZERO False", null)).map(Pair::getLeft).orElseThrow()));
+
+        //S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool (K:Bool->Bool->Bool True False)
 
         /*Optional<Pair<Term, PreType>> wttOpt = TypeChecker.infer(parseTree);
         System.out.println(parseTree);
