@@ -3,6 +3,7 @@ package typed.ski.deep.parser;
 import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.type.*;
 
+import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,6 +52,15 @@ public class Parser {
                     ++pos;
                 }
             }
+            else if (input.charAt(pos) == '[') {
+                appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms, definitions);
+                int closingPos = findEndOfList(input, pos + 1);
+                String listToBeParsed = input.substring(pos + 1, closingPos);
+                Preterm parsedList = listToBeParsed.isEmpty() ? new EmptyListPre() : parseList(listToBeParsed, definitions);
+                preterms.add(parsedList);
+                firstNotProcessedPos = closingPos + 1;
+                pos = closingPos + 1;
+            }
             else {
                 ++pos;
             }
@@ -61,6 +71,36 @@ public class Parser {
         }
 
         return preterms.size() == 1 ? preterms.get(0) : preterms.stream().reduce(App::new).orElseThrow();
+    }
+
+    private static int findEndOfList(String text, int pos) {
+        int diff = 1;
+        while (pos < text.length()) {
+            if (text.charAt(pos) == ']') {
+                --diff;
+            }
+            else if (text.charAt(pos) == '[') {
+                ++diff;
+            }
+
+            if (diff == 0) {
+                return pos;
+            }
+            ++pos;
+        }
+        throw new IllegalStateException("Invalid parentheses");
+    }
+
+    private static Preterm parseList(String input, Map<String, Preterm> definitions) {
+        List<Preterm> listItems = Stream.of(input.split(","))
+                .map(listItem -> createParseTree(listItem, definitions))
+                .collect(Collectors.toList());
+        listItems.add(new EmptyListPre());
+        Collections.reverse(listItems);
+
+        return listItems.stream()
+                .reduce((list, item) -> new ListItemPre(item, (ListItemPre) list))
+                .orElseThrow();
     }
 
     private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) {
@@ -163,7 +203,7 @@ public class Parser {
         else if (token.equals("ZERO")) {
             return new ZERO();
         }
-        else if (definitions.containsKey(token)) {
+        else if (definitions != null && definitions.containsKey(token)) {
             return definitions.get(token);
         }
         else {

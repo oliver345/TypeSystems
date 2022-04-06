@@ -31,7 +31,8 @@ public class Application implements Term {
     public Term apply() {
 
         if (leftTerm instanceof S || leftTerm instanceof K || leftTerm instanceof Literal || leftTerm instanceof True ||
-                leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec || leftTerm instanceof Succ) {
+                leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec ||
+                leftTerm instanceof Succ || leftTerm instanceof ListItem) {
             return this;
         }
 

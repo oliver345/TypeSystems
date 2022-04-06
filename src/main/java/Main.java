@@ -9,6 +9,25 @@ import java.util.Collections;
 public class Main {
     public static void main(String[] args) {
 
+        /*
+        Infer-unify: List? kell unify?
+
+        List as AnnotatedPreterm?
+         */
+
+        SKI.executeCode("L=[ZERO,Succ ZERO];" +
+                "S K I True;" +
+                "isZero=Rec True (K (K False));" +
+                "isZero ZERO;" +
+                "B=isZero ZERO;" +
+                "isZero (Succ ZERO);" +
+                "ski=S K I;" +
+                "ski False;" +
+                "L;" +
+                "B;" +
+                "List=[True,B,False];" +
+                "List");
+
         SKI.executeCode("" +
                 "S K I True;" +
                 "isZero=Rec True (K (K False));" +
@@ -94,6 +113,28 @@ public class Main {
         System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("S{}{Bool}{}:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool", null)).map(Pair::getLeft).orElseThrow()));
         System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("S K I True", null)).map(Pair::getLeft).orElseThrow()));
         System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("K (K False) ZERO False", null)).map(Pair::getLeft).orElseThrow()));
+
+        //To be fixed: Parser for List of lists
+        /*
+        listparserben: ha input starts with "[": akkor megkeresni a végét és a zárojelek közti szövegre rekurzivan ráhivni listparsert megint
+        egyébként: megkeresni az első ","-t és createParseTree()
+         */
+        //System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[[[],[],[]],[],[]]", null))));
+
+        System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[]", null))));
+        System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[ZERO]", null))));
+        System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[ZERO,Succ ZERO,Succ (Succ ZERO)]", null))));
+        System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[[],[]]", null))));
+        System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[ZERO]", null))));
+
+        // ha list parser fixed ->  System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[[ZERO,Succ ZERO],[ZERO],[Succ (Succ ZERO),ZERO,Succ ZERO]]", null))));
+
+        System.out.println("with infer");
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("[]", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("[ZERO]", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("[ZERO,Succ ZERO,Succ (Succ ZERO)]", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("[[],[]]", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("[ZERO]", null)).map(Pair::getLeft).orElseThrow()));
 
         //S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool (K:Bool->Bool->Bool True False)
 

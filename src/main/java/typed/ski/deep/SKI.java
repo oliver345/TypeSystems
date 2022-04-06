@@ -41,7 +41,7 @@ public class SKI {
     }
 
     private static void storeDefinition(String key, String statement, Map<String, Preterm> definitions) {
-        if (!reservedTokens.contains(key) && key.matches("[^(:)<>{}=\\s-]+")) {
+        if (!reservedTokens.contains(key) && key.matches("[^(:)\\]\\[<>{}=\\s-]+")) {
             definitions.put(key, Parser.createParseTree(statement, definitions));
             System.out.println(key + " = " + statement);
         }
