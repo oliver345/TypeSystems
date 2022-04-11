@@ -13,8 +13,10 @@ import java.util.stream.Stream;
 
 public class SKI {
 
+    public static final String le = "Rec (K True) (K (S (K (Rec False))(S (K K))))";
+
     private static final List<String> reservedTokens = List.of("S", "K", "I", "False", "True", "ITE", "Rec", "Succ",
-            "ZERO", "Bool", "Nat", "Str");
+            "ZERO", "Bool", "Nat", "Str", "RecList", "Cons");
 
     public static void executeCode(String input) {
         String[] codeLines = input.split(";");
@@ -41,7 +43,7 @@ public class SKI {
     }
 
     private static void storeDefinition(String key, String statement, Map<String, Preterm> definitions) {
-        if (!reservedTokens.contains(key) && key.matches("[^(:)<>{}=\\s-]+")) {
+        if (!reservedTokens.contains(key) && key.matches("[^(:)\\]\\[<>{}=\\s-]+")) {
             definitions.put(key, Parser.createParseTree(statement, definitions));
             System.out.println(key + " = " + statement);
         }

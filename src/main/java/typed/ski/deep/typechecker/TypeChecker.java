@@ -3,11 +3,19 @@ package typed.ski.deep.typechecker;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import typed.ski.deep.lang.preterm.*;
-import typed.ski.deep.lang.term.Application;
-import typed.ski.deep.lang.term.Literal;
-import typed.ski.deep.lang.term.Term;
+import typed.ski.deep.lang.preterm.False;
+import typed.ski.deep.lang.preterm.I;
+import typed.ski.deep.lang.preterm.ITE;
+import typed.ski.deep.lang.preterm.K;
+import typed.ski.deep.lang.preterm.Rec;
+import typed.ski.deep.lang.preterm.S;
+import typed.ski.deep.lang.preterm.Succ;
+import typed.ski.deep.lang.preterm.True;
+import typed.ski.deep.lang.preterm.ZERO;
+import typed.ski.deep.lang.term.*;
 import typed.ski.deep.lang.type.*;
 
+import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,26 +61,28 @@ public class TypeChecker {
                     new Function(new Function(a, new Function(b, c)),
                             new Function(new Function(a, b), new Function(a, c)))));
         }
+
         if (parseTree instanceof K) {
             PreType a = new Unknown();
             PreType b = new Unknown();
             return Optional.of(Pair.of(new typed.ski.deep.lang.term.K(a, b), new Function(a, new Function(b, a))));
         }
+
         if (parseTree instanceof I) {
             PreType a = new Unknown();
             return Optional.of(Pair.of(new typed.ski.deep.lang.term.I(a), new Function(a, a)));
         }
+
         if (parseTree instanceof ITE) {
             PreType a = new Unknown();
             return Optional.of(Pair.of(new typed.ski.deep.lang.term.ITE(a), new Function(new Bool(), new Function(a, new Function(a, a)))));
         }
+
         if (parseTree instanceof Rec) {
             PreType a = new Unknown();
             return Optional.of(Pair.of(new typed.ski.deep.lang.term.Rec(a),
                     new Function(a, new Function(new Function(new Nat(), new Function(a, a)), new Function(new Nat(), a)))));
         }
-
-
 
         if (parseTree instanceof S_ABC) {
             PreType a = ((S_ABC) parseTree).getA();
@@ -151,6 +161,9 @@ public class TypeChecker {
             else if (leftPreterm instanceof I || (leftPreterm instanceof I_A && ((I_A) leftPreterm).getA() instanceof Unknown)) {
                 leftPreterm = new I_A(rightWtt.getRight());
             }
+            else if (leftPreterm instanceof RecListPre || (leftPreterm instanceof RecListPre_AB && ((RecListPre_AB) leftPreterm).getB() instanceof Unknown)) {
+                leftPreterm = new RecListPre_AB(leftPreterm instanceof RecListPre ? new Unknown() : ((RecListPre_AB) leftPreterm).getA(), rightWtt.getRight());
+            }
 
             Optional<Pair<Term, PreType>> leftWttOpt = infer(leftPreterm);
 
@@ -180,6 +193,39 @@ public class TypeChecker {
 
         if (parseTree instanceof Succ) {
             return Optional.of(Pair.of(new typed.ski.deep.lang.term.Succ(), new Function(new Nat(), new Nat())));
+        }
+
+        if (parseTree instanceof EmptyListPre) {
+            return Optional.of(Pair.of(new EmptyList(), new typed.ski.deep.lang.type.List(null)));
+        }
+
+        if (parseTree instanceof ListItemPre) {
+            Pair<Term, PreType> headWtt = infer(((ListItemPre) parseTree).getHead()).orElseThrow();
+            Pair<Term, PreType> tailWtt = infer(((ListItemPre) parseTree).getTail()).orElseThrow();
+
+            if (areTypesEqual(tailWtt.getRight(), new typed.ski.deep.lang.type.List(headWtt.getRight()))) {
+                return Optional.of(Pair.of(new ListItem(headWtt.getLeft(), (ListItem) tailWtt.getLeft()), new typed.ski.deep.lang.type.List(headWtt.getRight())));
+            }
+            else {
+                throw new IllegalStateException("Type of head and type parameter of tail don't match: " + headWtt.getRight() + ", " + tailWtt.getRight());
+            }
+        }
+
+        if (parseTree instanceof RecListPre) {
+            PreType a = new Unknown();
+            PreType b = new Unknown();
+            return Optional.of(Pair.of(new RecList(a, b),
+                    new Function(b, new Function(new Function(a, new Function(new typed.ski.deep.lang.type.List(a),
+                            new Function(b, b))), new Function(new typed.ski.deep.lang.type.List(a), b)))));
+        }
+
+        if (parseTree instanceof RecListPre_AB) {
+            PreType a = ((RecListPre_AB) parseTree).getA();
+            PreType b = ((RecListPre_AB) parseTree).getB();
+
+            return Optional.of(Pair.of(new RecList(a, b),
+                    new Function(b, new Function(new Function(a, new Function(new typed.ski.deep.lang.type.List(a),
+                            new Function(b, b))), new Function(new typed.ski.deep.lang.type.List(a), b)))));
         }
 
         if (parseTree instanceof Lit) {
@@ -380,6 +426,63 @@ public class TypeChecker {
                     new Function(type, new Function(new Function(new Nat(), new Function(type, type)), new Function(new Nat(), type)))));
         }
 
+        if (parseTree instanceof EmptyListPre) {
+            return Optional.of(Pair.of(new EmptyList(), new typed.ski.deep.lang.type.List(null)));
+        }
+
+        if (parseTree instanceof ListItemPre) {
+            Pair<Term, PreType> inferredHead = inferWithPreType(((ListItemPre) parseTree).getHead()).orElseThrow();
+            Pair<Term, PreType> inferredTail = inferWithPreType(((ListItemPre) parseTree).getTail()).orElseThrow();
+
+            if (areTypesEqual(inferredTail.getRight(), new typed.ski.deep.lang.type.List(inferredHead.getRight()))) {
+                return Optional.of(Pair.of(new ListItem(inferredHead.getLeft(), (ListItem) inferredTail.getLeft()), new typed.ski.deep.lang.type.List(inferredHead.getRight())));
+            }
+            else {
+                throw new IllegalStateException("Type of head and type parameter of tail don't match: " + inferredHead.getRight() + ", " + inferredTail.getRight());
+            }
+        }
+
+        if (parseTree instanceof RecListPre) {
+            Unknown a = new Unknown(varCount++);
+            Unknown b = new Unknown(varCount);
+            insertIntoUnknownTypes(a, b);
+
+            return Optional.of(Pair.of(new RecList(a, b),
+                    new Function(b, new Function(new Function(a, new Function(new typed.ski.deep.lang.type.List(a),
+                            new Function(b, b))), new Function(new typed.ski.deep.lang.type.List(a), b)))));
+        }
+
+        if (parseTree instanceof RecListPre_AB) {
+            List<Unknown> unknowns = new ArrayList<>();
+
+            PreType a = ((RecListPre_AB) parseTree).getA();
+            PreType b = ((RecListPre_AB) parseTree).getB();
+
+            if (a instanceof Unknown) {
+                ((Unknown) a).setTypeId(varCount++);
+                unknowns.add((Unknown) a);
+            }
+
+            if (b instanceof Unknown) {
+                ((Unknown) b).setTypeId(varCount);
+                unknowns.add((Unknown) b);
+            }
+
+            insertIntoUnknownTypes(unknowns.toArray(new Unknown[0]));
+
+            return Optional.of(Pair.of(new RecList(a, b),
+                    new Function(b, new Function(new Function(a, new Function(new typed.ski.deep.lang.type.List(a),
+                            new Function(b, b))), new Function(new typed.ski.deep.lang.type.List(a), b)))));
+        }
+
+        if (parseTree instanceof ConsPre) {
+            Unknown unknown = new Unknown(varCount);
+            insertIntoUnknownTypes(unknown);
+
+            return Optional.of(Pair.of(new Cons(unknown),
+                    new Function(unknown, new Function(new typed.ski.deep.lang.type.List(unknown), new typed.ski.deep.lang.type.List(unknown)))));
+        }
+
         return Optional.empty();
     }
 
@@ -431,6 +534,10 @@ public class TypeChecker {
                 typeEquations.add(Pair.of(((Function) pair.getLeft()).getResultType(), ((Function) pair.getRight()).getResultType()));
                 typeEquations.add(Pair.of(((Function) pair.getLeft()).getInputType(), ((Function) pair.getRight()).getInputType()));
 
+                return unify(typeEquations, types);
+            }
+            else if (pair.getLeft() instanceof typed.ski.deep.lang.type.List && pair.getRight() instanceof typed.ski.deep.lang.type.List) {
+                typeEquations.add(Pair.of(((typed.ski.deep.lang.type.List) pair.getLeft()).getA(), ((typed.ski.deep.lang.type.List) pair.getRight()).getA()));
                 return unify(typeEquations, types);
             }
             else if (areTypesEqual(pair.getLeft(), pair.getRight())) {
@@ -555,6 +662,32 @@ public class TypeChecker {
                 return Optional.of(new typed.ski.deep.lang.term.Rec(recType));
             }
         }
+        else if (parseTree instanceof RecListPre || parseTree instanceof RecListPre_AB) {
+
+            PreType expectedTypeStructure = new Function(new Unknown(), new Function(new Function(new Unknown(), new Function(new typed.ski.deep.lang.type.List(new Unknown()),
+                    new Function(new Unknown(), new Unknown()))), new Function(new typed.ski.deep.lang.type.List(new Unknown()), new Unknown())));
+
+            if (checkTypeStructures(expectedTypeStructure, type)) {
+
+                PreType A = ((Function) ((Function) ((Function) type).getResultType()).getInputType()).getInputType();
+                PreType B = ((Function) type).getInputType();
+
+                if (parseTree instanceof RecListPre_AB &&
+                        ((!(((RecListPre_AB) parseTree).getA() instanceof Unknown) && !areTypesEqual(((RecListPre_AB) parseTree).getA(), A)) ||
+                        (!(((RecListPre_AB) parseTree).getB() instanceof Unknown) && !areTypesEqual(((RecListPre_AB) parseTree).getB(), B)))) {
+                    return Optional.empty();
+                }
+
+                if (A instanceof Unknown && parseTree instanceof RecListPre_AB) {
+                    A = ((RecListPre_AB) parseTree).getA();
+                }
+                if (B instanceof Unknown && parseTree instanceof RecListPre_AB) {
+                    B = ((RecListPre_AB) parseTree).getB();
+                }
+
+                return Optional.of(new RecList(A, B));
+            }
+        }
 
         return Optional.empty();
     }
@@ -568,8 +701,41 @@ public class TypeChecker {
             return false;
         }
 
-        return (type instanceof Function && otherType instanceof Function) ?
-                compareFunctions((Function) type, (Function) otherType) : type.getClass().equals(otherType.getClass());
+        if (type instanceof Function && otherType instanceof Function) {
+            return compareFunctions((Function) type, (Function) otherType);
+        }
+        else if (type instanceof typed.ski.deep.lang.type.List && otherType instanceof typed.ski.deep.lang.type.List) {
+            if (((typed.ski.deep.lang.type.List) type).getA() == null || ((typed.ski.deep.lang.type.List) otherType).getA() == null) {
+                return true;
+            }
+            else {
+                return areTypesEqual(((typed.ski.deep.lang.type.List) type).getA(), ((typed.ski.deep.lang.type.List) otherType).getA());
+            }
+        }
+        else {
+            return type.getClass().equals(otherType.getClass());
+        }
+    }
+
+    private static boolean checkTypeStructures(PreType type, PreType otherType) {
+        if (type == null || otherType == null) {
+            return false;
+        }
+
+        if (type instanceof Function && otherType instanceof Function) {
+            return checkTypeStructures(((Function) type).getInputType(), ((Function) otherType).getInputType()) && checkTypeStructures(((Function) type).getResultType(), ((Function) otherType).getResultType());
+        }
+        else if (type instanceof typed.ski.deep.lang.type.List && otherType instanceof typed.ski.deep.lang.type.List) {
+            if (((typed.ski.deep.lang.type.List) type).getA() == null || ((typed.ski.deep.lang.type.List) otherType).getA() == null) {
+                return true;
+            }
+            else {
+                return checkTypeStructures(((typed.ski.deep.lang.type.List) type).getA(), ((typed.ski.deep.lang.type.List) otherType).getA());
+            }
+        }
+        else {
+            return true;
+        }
     }
 
     private static PreType substituteUnknownInPretypeWithType(PreType preType, Unknown unknown, PreType replaceWith) {

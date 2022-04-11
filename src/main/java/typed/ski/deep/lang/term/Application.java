@@ -1,9 +1,6 @@
 package typed.ski.deep.lang.term;
 
-import typed.ski.deep.lang.type.Function;
-import typed.ski.deep.lang.type.Nat;
-import typed.ski.deep.lang.type.PreType;
-import typed.ski.deep.lang.type.Unknown;
+import typed.ski.deep.lang.type.*;
 
 import java.util.Map;
 
@@ -31,7 +28,9 @@ public class Application implements Term {
     public Term apply() {
 
         if (leftTerm instanceof S || leftTerm instanceof K || leftTerm instanceof Literal || leftTerm instanceof True ||
-                leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec || leftTerm instanceof Succ) {
+                leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec ||
+                leftTerm instanceof Succ || leftTerm instanceof ListItem || leftTerm instanceof RecList ||
+                leftTerm instanceof Cons) {
             return this;
         }
 
@@ -56,6 +55,14 @@ public class Application implements Term {
 
             if (subApplication.getLeftTerm() instanceof Rec) {
                 return this;
+            }
+
+            if (subApplication.getLeftTerm() instanceof RecList) {
+                return this;
+            }
+
+            if (subApplication.getLeftTerm() instanceof Cons) {
+                return new ListItem(subApplication.getRightTerm(), (ListItem) rightTerm);
             }
 
             if (subApplication.getLeftTerm() instanceof Application) {
@@ -95,6 +102,55 @@ public class Application implements Term {
                                         termS),
                                 ((Application) rightTerm).getRightTerm());
                         return new Application(new Function(recTypeParam, recTypeParam), recTypeParam, appSN.apply(), appRec.apply()).apply();
+                    }
+                }
+
+                if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof RecList) {
+                    Term termN = ((Application) subApplication.getLeftTerm()).getRightTerm();
+                    if (rightTerm instanceof EmptyList) {
+                        return termN;
+                    }
+                    else {
+                        RecList termRecList = (RecList) ((Application) subApplication.getLeftTerm()).getLeftTerm();
+                        PreType typeRecList = ((Application) subApplication.getLeftTerm()).getLeftType();
+                        PreType recListTypeParam = termRecList.getB();
+                        PreType listTypeParam = termRecList.getA();
+                        Term termC = subApplication.getRightTerm();
+                        PreType typeC = subApplication.getRightType();
+
+                        Application appRecListTail = new Application(
+                                new Function(new List(listTypeParam), recListTypeParam),
+                                rightType,
+                                new Application(
+                                        new Function(typeC, new Function(new List(listTypeParam), recListTypeParam)),
+                                        typeC,
+                                        new Application(
+                                                typeRecList,
+                                                recListTypeParam,
+                                                termRecList,
+                                                termN
+                                        ),
+                                        termC
+                                ),
+                                ((ListItem) rightTerm).getTail()
+                        );
+
+                        return new Application(
+                                new Function(recListTypeParam, recListTypeParam),
+                                recListTypeParam,
+                                new Application(
+                                        new Function(new List(listTypeParam), new Function(recListTypeParam, recListTypeParam)),
+                                        rightType,
+                                        new Application(
+                                                typeC,
+                                                listTypeParam,
+                                                termC,
+                                                ((ListItem) rightTerm).getHead()
+                                        ),
+                                        ((ListItem) rightTerm).getTail()
+                                ),
+                                appRecListTail.apply()
+                        ).apply();
                     }
                 }
             }
