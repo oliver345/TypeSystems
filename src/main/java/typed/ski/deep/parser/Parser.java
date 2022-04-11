@@ -172,6 +172,15 @@ public class Parser {
                 return new K_AB(parsePreType(parts[0].substring(2)), parsePreType(parts[1].substring(0, parts[1].length() - 1)));
             }
         }
+        else if (token.equals("RecList") || (token.startsWith("RecList") && token.contains("}{"))) {
+            if (token.equals("RecList")) {
+                return new RecListPre();
+            }
+            else {
+                String[] parts = token.split("}\\{");
+                return new RecListPre_AB(parsePreType(parts[0].substring(8)), parsePreType(parts[1].substring(0, parts[1].length() - 1)));
+            }
+        }
         else if (token.equals("Rec") || (token.startsWith("Rec") && token.endsWith("}"))) {
             if (token.equals("Rec")) {
                 return new Rec();
@@ -202,6 +211,9 @@ public class Parser {
         }
         else if (token.equals("ZERO")) {
             return new ZERO();
+        }
+        else if (token.equals("Cons")) {
+            return new ConsPre();
         }
         else if (definitions != null && definitions.containsKey(token)) {
             return definitions.get(token);

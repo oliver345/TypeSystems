@@ -9,12 +9,6 @@ import java.util.Collections;
 public class Main {
     public static void main(String[] args) {
 
-        /*
-        Infer-unify: List? kell unify?
-
-        List as AnnotatedPreterm?
-         */
-
         SKI.executeCode("L=[ZERO,Succ ZERO];" +
                 "S K I True;" +
                 "isZero=Rec True (K (K False));" +
@@ -127,6 +121,10 @@ public class Main {
         System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[[],[]]", null))));
         System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[ZERO]", null))));
 
+
+//        System.out.println(TypeChecker.createWellTypedTree(Parser.createParseTree("RecList", null)));
+//        System.out.println(TypeChecker.createWellTypedTree(Parser.createParseTree("RecList{Nat}{Bool}", null)));
+
         // ha list parser fixed ->  System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[[ZERO,Succ ZERO],[ZERO],[Succ (Succ ZERO),ZERO,Succ ZERO]]", null))));
 
         System.out.println("with infer");
@@ -136,11 +134,52 @@ public class Main {
         System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("[[],[]]", null)).map(Pair::getLeft).orElseThrow()));
         System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("[ZERO]", null)).map(Pair::getLeft).orElseThrow()));
 
+        //System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("RecList", null)).map(Pair::getLeft).orElseThrow()));
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("RecList{Nat}{Bool}", null)).map(Pair::getLeft).orElseThrow()));
+
+        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("Rec True (K (K False)):Nat->Bool->Bool ZERO", null)).map(Pair::getLeft).orElseThrow()));
+
         //S:(Bool->Bool->Bool)->(Bool->Bool)->Bool->Bool K:Bool->Bool->Bool I:Bool->Bool (K:Bool->Bool->Bool True False)
+
+        System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("Rec (K True) (K (S (K (Rec False))(S (K K)))) (Succ (Succ ZERO)) ZERO", null))));
+
+
+
+
+        System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("Cons ZERO [ZERO, Succ (Succ ZERO)]", null))));
+
+        /*SKI.executeCode("le=" + SKI.le + ";" +
+                "insertionSort=ITE " +
+                "isZero=Rec True (K (K False));" +
+                "isZero ZERO;" +
+                "B=isZero ZERO;" +
+                "isZero (Succ ZERO);" +
+                "ski=S K I;" +
+                "ski False;" +
+                "L;" +
+                "B;" +
+                "List=[True,B,False];" +
+                "List");*/
 
         /*Optional<Pair<Term, PreType>> wttOpt = TypeChecker.infer(parseTree);
         System.out.println(parseTree);
         System.out.println(wttOpt);
         wttOpt.ifPresent(wtt -> System.out.println(Evaluator.eval(wtt.getLeft())));*/
     }
+    /*
+        insert_sorted :: [Int] -> Int -> [Int]
+        insert_sorted = \list -> \v ->
+            case list of
+                x:xs | v>x -> x:insert_sorted xs v
+                _ -> v:list
+
+        insertion_sort :: [Int] -> [Int]
+        insertion_sort = \list ->
+            case list of
+                [] -> []
+                x:xs -> insert_sorted (insertion_sort xs) x
+
+        main = print (insertion_sort [8, 9, 3, 4, 7])
+     */
+
 }

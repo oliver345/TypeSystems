@@ -13,8 +13,10 @@ import java.util.stream.Stream;
 
 public class SKI {
 
+    public static final String le = "Rec (K True) (K (S (K (Rec False))(S (K K))))";
+
     private static final List<String> reservedTokens = List.of("S", "K", "I", "False", "True", "ITE", "Rec", "Succ",
-            "ZERO", "Bool", "Nat", "Str");
+            "ZERO", "Bool", "Nat", "Str", "RecList", "Cons");
 
     public static void executeCode(String input) {
         String[] codeLines = input.split(";");
