@@ -4,6 +4,8 @@ import typed.ski.deep.lang.type.*;
 
 import java.util.Map;
 
+import static typed.ski.deep.typechecker.TypeChecker.replaceTypeIfUnknown;
+
 public class Application implements Term {
 
     private PreType leftType;
@@ -99,7 +101,7 @@ public class Application implements Term {
                                 new Application(
                                         new Function(typeS, new Function(new Nat(), recTypeParam)), typeS,
                                         new Application(typeRec, recTypeParam, termRec, termZ),
-                                        termS),
+                                        termS), /* .apply() ?  */
                                 ((Application) rightTerm).getRightTerm());
                         return new Application(new Function(recTypeParam, recTypeParam), recTypeParam, appSN.apply(), appRec.apply()).apply();
                     }
@@ -146,9 +148,9 @@ public class Application implements Term {
                                                 listTypeParam,
                                                 termC,
                                                 ((ListItem) rightTerm).getHead()
-                                        ),
+                                        ).apply(),
                                         ((ListItem) rightTerm).getTail()
-                                ),
+                                ).apply(),
                                 appRecListTail.apply()
                         ).apply();
                     }
@@ -178,12 +180,9 @@ public class Application implements Term {
 
     @Override
     public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
-        if (leftType instanceof Unknown) {
-            leftType = resolvedTypes.get(((Unknown) leftType).getTypeId());
-        }
-
-        if (rightType instanceof Unknown) {
-            rightType = resolvedTypes.get(((Unknown) rightType).getTypeId());
-        }
+        leftType = replaceTypeIfUnknown(leftType, resolvedTypes);
+        rightType = replaceTypeIfUnknown(rightType, resolvedTypes);
+        leftTerm.substituteUnknownTypes(resolvedTypes);
+        rightTerm.substituteUnknownTypes(resolvedTypes);
     }
 }
