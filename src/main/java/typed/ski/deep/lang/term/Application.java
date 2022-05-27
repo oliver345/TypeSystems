@@ -100,8 +100,8 @@ public class Application implements Term {
                                 new Function(new Nat(), recTypeParam), new Nat(),
                                 new Application(
                                         new Function(typeS, new Function(new Nat(), recTypeParam)), typeS,
-                                        new Application(typeRec, recTypeParam, termRec, termZ),
-                                        termS), /* .apply() ?  */
+                                        new Application(typeRec, recTypeParam, termRec, termZ).apply(),
+                                        termS).apply(), /* .apply() ?  */
                                 ((Application) rightTerm).getRightTerm());
                         return new Application(new Function(recTypeParam, recTypeParam), recTypeParam, appSN.apply(), appRec.apply()).apply();
                     }
@@ -131,9 +131,9 @@ public class Application implements Term {
                                                 recListTypeParam,
                                                 termRecList,
                                                 termN
-                                        ),
+                                        ).apply(),
                                         termC
-                                ),
+                                ).apply(),
                                 ((ListItem) rightTerm).getTail()
                         );
 

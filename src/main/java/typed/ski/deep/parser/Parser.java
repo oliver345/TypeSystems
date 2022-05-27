@@ -92,15 +92,46 @@ public class Parser {
     }
 
     private static Preterm parseList(String input, Map<String, Preterm> definitions) {
-        List<Preterm> listItems = Stream.of(input.split(","))
-                .map(listItem -> createParseTree(listItem, definitions))
-                .collect(Collectors.toList());
+
+        List<Preterm> listItems = new ArrayList<>();
+        while (!input.isEmpty()) {
+            if (input.startsWith("[")) {
+                int closingPos = findEndOfList(input, 1);
+                listItems.add(parseList(input.substring(1, closingPos), definitions));
+                input = input.substring(closingPos + 1 == input.length() ? closingPos + 1 : closingPos + 2).strip();
+            }
+            else {
+                int listItemSeparator = findListItemSeparator(input);
+                listItems.add(createParseTree(input.substring(0, listItemSeparator), definitions));
+                input = input.substring(listItemSeparator == input.length() ? listItemSeparator : listItemSeparator + 1).strip();
+            }
+        }
+
         listItems.add(new EmptyListPre());
         Collections.reverse(listItems);
 
         return listItems.stream()
                 .reduce((list, item) -> new ListItemPre(item, (ListItemPre) list))
                 .orElseThrow();
+    }
+
+    private static int findListItemSeparator(String input) {
+        if (input.contains(",")) {
+            int pos = 0;
+            boolean notFound = true;
+            while (pos < input.length() && notFound) {
+                notFound = input.charAt(pos) != ',' || !areParenthesesValid(input.substring(0, pos), false);
+                ++pos;
+            }
+            if (!notFound) {
+                return pos - 1;
+            } else {
+                throw new IllegalStateException("Syntax error in list: " + input);
+            }
+        }
+        else {
+            return input.length();
+        }
     }
 
     private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) {
@@ -240,7 +271,7 @@ public class Parser {
         else if (input.contains("->")) {
             //Remove outer brackets
             if (input.charAt(0) == '(' && input.charAt(input.length() - 1) == ')'
-                    && areParenthesesValid(input.substring(1, input.length() - 1))) {
+                    && areParenthesesValid(input.substring(1, input.length() - 1), true)) {
                 input = input.substring(1, input.length() -1);
             }
 
@@ -264,16 +295,26 @@ public class Parser {
         throw new IllegalStateException("Could not parse to Ty, invalid token: " + input);
     }
 
-    private static boolean areParenthesesValid(String input) {
+    private static boolean areParenthesesValid(String input, boolean roundParentheses) {
+        char opening, closing;
+        if (roundParentheses) {
+            opening = '(';
+            closing = ')';
+        }
+        else {
+            opening = '[';
+            closing = ']';
+        }
+
         int bracketOpened = 0;
         int bracketClosed = 0;
         int index = 0;
         boolean validParentheses = true;
         while (validParentheses && index < input.length()) {
-            if (input.charAt(index) == '(') {
+            if (input.charAt(index) == opening) {
                 ++bracketOpened;
             }
-            else if (input.charAt(index) == ')'){
+            else if (input.charAt(index) == closing){
                 ++bracketClosed;
             }
 

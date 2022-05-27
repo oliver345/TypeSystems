@@ -139,23 +139,10 @@ public class Main {
         System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[True]", null))));
         System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("Cons True (Cons False (Cons True [True,False,True,False,True]))", null))));
 
-        // Infer + Check  Rec-et hasonloan mint RecList-et, menjen típus nélkül is
-        //To be fixed: Parser for List of lists
-        //System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[[[],[],[]],[],[]]", null))));
-        // ha list parser fixed ->  System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[[ZERO,Succ ZERO],[ZERO],[Succ (Succ ZERO),ZERO,Succ ZERO]]", null))));
-
         System.out.println("---- Testing in progress ----");
 
-        //System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("RecList [] (S (K K) (S ((S (K S) K) RecList ((S (S (K (S (K S) K)) S) (K K)) Cons [])) ((S (S (K (S (K S) K)) S) (K K)) (S ((S (S (K (S (K S) K)) S) (K K)) ((S (K S) K) (S (S ((S (K S) K) ((S (K S) K) ((S (K S) K) ITE) (Rec (K True) (K (S (K (Rec False))(S (K K)))))))) ((S (S (K (S (K S) K)) S) (K K)) ((S (K S) K) ((S (K S) K) Cons)) Cons))))) Cons))) []", null))));
-
-        /*SKI.executeCode("" +
-                "LE=Rec (K True) (K (S (K (Rec False)) (S (K K))));" +
-                "B=S (K S) K;" +
-                "C=S (S (K B) S) (K K);" +
-                "Insert=S (B RecList (C Cons [])) (C (S (C (B (S (S (B (B (B ITE) LE))) (C (B (B Cons)) Cons))))) Cons);" +
-                "InsertionSort=RecList [] (S (K K) Insert);" +
-                "InsertionSort [];" +
-                "");*/
+        SKI.executeCode("[[ZERO,ZERO],[ZERO,ZERO]]");
+        SKI.executeCode("[Cons ZERO [],[ZERO, ZERO]]"); // Eval list items?
 
         SKI.executeCode("" +
                 "LE=Rec (K True) (K (S (K (Rec False)) (S (K K))));" +
