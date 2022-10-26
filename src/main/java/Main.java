@@ -139,10 +139,17 @@ public class Main {
         System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("[True]", null))));
         System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("Cons True (Cons False (Cons True [True,False,True,False,True]))", null))));
 
-        System.out.println("---- Testing in progress ----");
+        System.out.println("---- ----");
 
+        // List items are not evaluated also!
         SKI.executeCode("[[ZERO,ZERO],[ZERO,ZERO]]");
-        SKI.executeCode("[Cons ZERO [],[ZERO, ZERO]]"); // Eval list items?
+        SKI.executeCode("[[ZERO],[ZERO, ZERO]]");
+
+        SKI.executeCode("Cons ZERO []");
+        SKI.executeCode("[Cons ZERO [],[ZERO,ZERO]]");
+
+        SKI.executeCode("[[Succ ZERO],[ZERO, ZERO]]");
+        SKI.executeCode("[[I True],[False, True]]");
 
         SKI.executeCode("" +
                 "LE=Rec (K True) (K (S (K (Rec False)) (S (K K))));" +
