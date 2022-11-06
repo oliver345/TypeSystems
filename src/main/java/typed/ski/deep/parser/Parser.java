@@ -262,11 +262,11 @@ public class Parser {
         if (input.equals("Bool")) {
             return new Bool();
         }
-        else if (input.equals("Str")) {
-            return new Str();
-        }
         else if (input.equals("Nat")) {
             return new Nat();
+        }
+        else if (input.equals("Str")) {
+            return new Str();
         }
         else if (input.contains("->")) {
             //Remove outer brackets
@@ -291,6 +291,10 @@ public class Parser {
                     return parseType(input.substring(matcher.start() + 1, matcher.end() - 1));
                 }
             }
+        }
+        else if (input.startsWith("List") && input.endsWith("}")) {
+            PreType typeParam = parsePreType(input.substring(5, input.length() - 1));
+            return new typed.ski.deep.lang.type.List(typeParam);
         }
         throw new IllegalStateException("Could not parse to Ty, invalid token: " + input);
     }

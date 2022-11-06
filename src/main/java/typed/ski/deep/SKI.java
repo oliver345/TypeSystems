@@ -18,12 +18,16 @@ public class SKI {
 
     public static final String le = "Rec (K True) (K (S (K (Rec False))(S (K K))))";
 
+    public static final String B = "S (K S) K";
+
+    public static final String C = "S (S (K B) S) (K K)";
+
     public static final String INSERT = "S (B RecList (C Cons [])) (C (B S (B (B C) (B (B (B B)) (S (B S (B (B B) (B (B ITE) LE))) (C (B B (B B Cons)) Cons))))) Cons)";
 
     public static final String INSERTION_SORT = "RecList [] (S (K K) INSERT)";
 
     private static final List<String> reservedTokens = List.of("S", "K", "I", "False", "True", "ITE", "Rec", "Succ",
-            "ZERO", "Bool", "Nat", "Str", "RecList", "Cons", "quit");
+            "ZERO", "Bool", "Nat", "Str", "RecList", "Cons", "quit", "List");
 
     public static void main(String[] args) {
         Optional<String> optionalArg = Stream.of(args)
