@@ -8,7 +8,7 @@ public class Evaluator {
 
         if (wtt instanceof S || wtt instanceof K || wtt instanceof I || wtt instanceof Literal || wtt instanceof True ||
                 wtt instanceof False || wtt instanceof ITE || wtt instanceof Succ || wtt instanceof ZERO ||
-                wtt instanceof Rec || wtt instanceof ListItem || wtt instanceof RecList || wtt instanceof Cons) {
+                wtt instanceof Rec || wtt instanceof RecList || wtt instanceof Cons || wtt instanceof EmptyList) {
             return wtt;
         }
         else if (wtt instanceof Application) {

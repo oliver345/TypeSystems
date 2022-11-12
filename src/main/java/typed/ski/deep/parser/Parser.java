@@ -111,7 +111,7 @@ public class Parser {
         Collections.reverse(listItems);
 
         return listItems.stream()
-                .reduce((list, item) -> new ListItemPre(item, (ListItemPre) list))
+                .reduce((list, item) -> new App(new App(new ConsPre(), item), list))
                 .orElseThrow();
     }
 

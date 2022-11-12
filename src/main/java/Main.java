@@ -19,8 +19,8 @@ public class Main {
                 "ski False;" +
                 "L;" +
                 "B;" +
-                "List=[True,B,False];" +
-                "List");
+                "List1=[True,B,False];" +
+                "List1");
 
         SKI.executeCode("" +
                 "S K I True;" +

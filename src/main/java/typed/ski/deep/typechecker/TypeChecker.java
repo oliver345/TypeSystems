@@ -61,6 +61,7 @@ public class TypeChecker {
         }
     }
 
+    //TODO: rename
     private static Optional<Pair<Term, PreType>> inferWithPreType(Preterm parseTree) {
         int varCount = unknownTypes.size();
 
@@ -240,22 +241,6 @@ public class TypeChecker {
                     new Function(type, new Function(new Function(new Nat(), new Function(type, type)), new Function(new Nat(), type)))));
         }
 
-        if (parseTree instanceof EmptyListPre) {
-            return Optional.of(Pair.of(new EmptyList(), new typed.ski.deep.lang.type.List(null)));
-        }
-
-        if (parseTree instanceof ListItemPre) {
-            Pair<Term, PreType> inferredHead = inferWithPreType(((ListItemPre) parseTree).getHead()).orElseThrow();
-            Pair<Term, PreType> inferredTail = inferWithPreType(((ListItemPre) parseTree).getTail()).orElseThrow();
-
-            if (areTypesEqual(inferredTail.getRight(), new typed.ski.deep.lang.type.List(inferredHead.getRight()))) {
-                return Optional.of(Pair.of(new ListItem(inferredHead.getLeft(), (ListItem) inferredTail.getLeft()), new typed.ski.deep.lang.type.List(inferredHead.getRight())));
-            }
-            else {
-                throw new IllegalStateException("Type of head and type parameter of tail don't match: " + inferredHead.getRight() + ", " + inferredTail.getRight());
-            }
-        }
-
         if (parseTree instanceof RecListPre) {
             Unknown a = new Unknown(varCount++);
             Unknown b = new Unknown(varCount);
@@ -289,6 +274,10 @@ public class TypeChecker {
                             new Function(b, b))), new Function(new typed.ski.deep.lang.type.List(a), b)))));
         }
 
+        if (parseTree instanceof EmptyListPre) {
+            return Optional.of(Pair.of(new EmptyList(), new typed.ski.deep.lang.type.List(null)));
+        }
+
         if (parseTree instanceof ConsPre) {
             Unknown unknown = new Unknown(varCount);
             insertIntoUnknownTypes(unknown);
@@ -300,7 +289,7 @@ public class TypeChecker {
         return Optional.empty();
     }
 
-    //Make private!
+    //TODO: Make private!
     public static Optional<Pair<Term, PreType>> infer(Preterm parseTree) {
 
         if (parseTree instanceof S) {
@@ -422,12 +411,16 @@ public class TypeChecker {
             }
             Pair<Term, PreType> leftWtt = leftWttOpt.get();
 
-
             if (leftWtt.getRight() instanceof Function) {
                 Function leftType = (Function) leftWtt.getRight();
                 if (leftType.getInputType() instanceof Unknown) {
+                    /*
+                    TODO: Simplify:
+                    substituteUnknownInPretypeWithType(leftType.getInputType(), (Unknown) leftType.getInputType(), rightWtt.getRight() ===> rightWtt.getRight()
+                     */
                     leftType = new Function(substituteUnknownInPretypeWithType(leftType.getInputType(), (Unknown) leftType.getInputType(), rightWtt.getRight()), leftType.getResultType());
                 }
+
                 if (leftType.getInputType() instanceof typed.ski.deep.lang.type.List &&
                         ((typed.ski.deep.lang.type.List) leftType.getInputType()).getA() instanceof Unknown &&
                         rightWtt.getRight() instanceof typed.ski.deep.lang.type.List) {
@@ -448,18 +441,6 @@ public class TypeChecker {
 
         if (parseTree instanceof EmptyListPre) {
             return Optional.of(Pair.of(new EmptyList(), new typed.ski.deep.lang.type.List(null)));
-        }
-
-        if (parseTree instanceof ListItemPre) {
-            Pair<Term, PreType> headWtt = infer(((ListItemPre) parseTree).getHead()).orElseThrow();
-            Pair<Term, PreType> tailWtt = infer(((ListItemPre) parseTree).getTail()).orElseThrow();
-
-            if (areTypesEqual(tailWtt.getRight(), new typed.ski.deep.lang.type.List(headWtt.getRight()))) {
-                return Optional.of(Pair.of(new ListItem(headWtt.getLeft(), (ListItem) tailWtt.getLeft()), new typed.ski.deep.lang.type.List(headWtt.getRight())));
-            }
-            else {
-                throw new IllegalStateException("Type of head and type parameter of tail don't match: " + headWtt.getRight() + ", " + tailWtt.getRight());
-            }
         }
 
         if (parseTree instanceof RecListPre) {
