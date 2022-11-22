@@ -174,7 +174,20 @@ public class Application implements Term {
 
     @Override
     public String toString() {
-        return isItAList() ? toListFormat() : "(" + leftTerm + " " + rightTerm + ")";
+        return "(" + leftTerm + " " + rightTerm + ")";
+    }
+
+    @Override
+    public String toString(boolean prettyPrint) {
+        if (prettyPrint) {
+            if (isItAList()) {
+                return toListFormat();
+            }
+            else if (isItANat()) {
+                return toNatFormat();
+            }
+        }
+        return toString();
     }
 
     @Override
@@ -189,7 +202,15 @@ public class Application implements Term {
         return leftTerm instanceof Application && ((Application) leftTerm).getLeftTerm() instanceof Cons;
     }
 
+    private boolean isItANat() {
+        return leftTerm instanceof Succ;
+    }
+
     private String toListFormat() {
-        return "[" + ((Application) leftTerm).getRightTerm() + "," + rightTerm + "]";
+        return "[" + ((Application) leftTerm).getRightTerm().toString(true) + "," + rightTerm.toString(true) + "]";
+    }
+
+    private String toNatFormat() {
+        return String.valueOf(Integer.parseInt(rightTerm.toString(true)) + 1);
     }
 }

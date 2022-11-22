@@ -166,6 +166,7 @@ public class Main {
                 "InsertionSort [Succ (Succ ZERO), ZERO, Succ ZERO];" +
                 "InsertionSort [Succ (Succ ZERO), ZERO, Succ (Succ (Succ (Succ ZERO))), Succ ZERO];" +
                 "InsertionSort [Succ (Succ ZERO), ZERO, Succ ZERO, Succ (Succ (Succ (Succ ZERO))), ZERO, Succ ZERO];" +
+                "InsertionSort [2, 0, 1, 4, 0, 1];" +
                 "");
     }
 }
