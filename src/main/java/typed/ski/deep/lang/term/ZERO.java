@@ -12,5 +12,10 @@ public class ZERO implements Term {
     }
 
     @Override
+    public String toString(boolean prettyPrint) {
+        return prettyPrint ? "0" : toString();
+    }
+
+    @Override
     public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {}
 }

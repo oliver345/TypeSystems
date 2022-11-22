@@ -246,11 +246,32 @@ public class Parser {
         else if (token.equals("Cons")) {
             return new ConsPre();
         }
+        else if (isTokenInteger(token)) {
+            int intValue = Integer.parseInt(token);
+            if (intValue == 0) {
+                return new ZERO();
+            }
+            else {
+                Preterm result = new ZERO();
+                for (int i = 0; i < intValue; i++) {
+                    result = new App(new Succ(), result);
+                }
+                return result;
+            }
+        }
         else if (definitions != null && definitions.containsKey(token)) {
             return definitions.get(token);
         }
         else {
             return new Lit(token);
+        }
+    }
+
+    private static boolean isTokenInteger(String token) {
+        try {
+            return Integer.parseInt(token) >= 0;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 

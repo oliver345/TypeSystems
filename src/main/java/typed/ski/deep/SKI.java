@@ -29,32 +29,36 @@ public class SKI {
     private static final List<String> reservedTokens = List.of("S", "K", "I", "False", "True", "ITE", "Rec", "Succ",
             "ZERO", "Bool", "Nat", "Str", "RecList", "Cons", "quit", "List");
 
-    public static void main(String[] args) {
-        Optional<String> optionalArg = Stream.of(args)
-                .filter(arg -> arg.startsWith("-eval"))
-                .findFirst();
+    private static boolean prettyPrintStyle = true;
 
-        if (optionalArg.isPresent()) {
-            String argInput = optionalArg.get();
-            int posOfEqual = argInput.indexOf("=");
-            if (posOfEqual > -1) {
-                String sourcePath = argInput.substring(posOfEqual + 1);
-                Path path = Paths.get(sourcePath);
-                try {
-                    String code = Files.lines(path).collect(Collectors.joining());
-                    executeCode(code);
-                }
-                catch (IOException ioException) {
-                    throw new RuntimeException(ioException);
-                }
-            }
-            else {
-                throw new IllegalArgumentException(argInput);
-            }
-        }
-        else {
-            runInREPL();
-        }
+    public static void main(String[] args) {
+
+        Stream.of(args)
+                .filter(arg -> arg.startsWith("-simplePrintStyle"))
+                .findAny()
+                .ifPresent(arg -> prettyPrintStyle = false);
+
+        Stream.of(args)
+                .filter(arg -> arg.startsWith("-eval"))
+                .findAny()
+                .ifPresentOrElse(arg -> {
+                    int posOfEqual = arg.indexOf("=");
+                    if (posOfEqual > -1) {
+                        String sourcePath = arg.substring(posOfEqual + 1);
+                        Path path = Paths.get(sourcePath);
+                        try {
+                            String code = Files.lines(path).collect(Collectors.joining());
+                            executeCode(code);
+                        }
+                        catch (IOException ioException) {
+                            throw new RuntimeException(ioException);
+                        }
+                    }
+                    else {
+                        throw new IllegalArgumentException(arg);
+                    }
+                },
+                SKI::runInREPL);
     }
 
     public static void executeCode(String input) {
@@ -71,7 +75,7 @@ public class SKI {
                 case 2 -> storeDefinition(parts[0], parts[1], finalDefs);
                 case 1 -> {
                     Term result = executeCodeLine(parts[0], finalDefs);
-                    System.out.println(parts[0] + " ==> " + result);
+                    System.out.println(parts[0] + " ==> " + result.toString(prettyPrintStyle));
                 }
                 default -> throw new IllegalStateException("Invalid statement: " + codeLine);
             }
@@ -95,6 +99,7 @@ public class SKI {
             switch (input) {
                 case "quit" -> stayInREPL = false;
                 case "list defs" -> definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
+                case "toggle print style" -> prettyPrintStyle = !prettyPrintStyle;
                 case "" -> {}
                 default -> executeCode(input, definitions);
             }
