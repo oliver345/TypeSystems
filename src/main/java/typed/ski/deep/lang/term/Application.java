@@ -31,8 +31,7 @@ public class Application implements Term {
 
         if (leftTerm instanceof S || leftTerm instanceof K || leftTerm instanceof Literal || leftTerm instanceof True ||
                 leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec ||
-                leftTerm instanceof Succ || leftTerm instanceof ListItem || leftTerm instanceof RecList ||
-                leftTerm instanceof Cons) {
+                leftTerm instanceof Succ || leftTerm instanceof RecList || leftTerm instanceof Cons) {
             return this;
         }
 
@@ -64,7 +63,7 @@ public class Application implements Term {
             }
 
             if (subApplication.getLeftTerm() instanceof Cons) {
-                return new ListItem(subApplication.getRightTerm(), (ListItem) rightTerm);
+                return this;
             }
 
             if (subApplication.getLeftTerm() instanceof Application) {
@@ -134,7 +133,7 @@ public class Application implements Term {
                                         ).apply(),
                                         termC
                                 ).apply(),
-                                ((ListItem) rightTerm).getTail()
+                                ((Application) rightTerm).getRightTerm()
                         );
 
                         return new Application(
@@ -147,9 +146,9 @@ public class Application implements Term {
                                                 typeC,
                                                 listTypeParam,
                                                 termC,
-                                                ((ListItem) rightTerm).getHead()
+                                                ((Application) ((Application) rightTerm).getLeftTerm()).getRightTerm()
                                         ).apply(),
-                                        ((ListItem) rightTerm).getTail()
+                                        ((Application) rightTerm).getRightTerm()
                                 ).apply(),
                                 appRecListTail.apply()
                         ).apply();
@@ -175,7 +174,7 @@ public class Application implements Term {
 
     @Override
     public String toString() {
-        return leftTerm + " " + rightTerm;
+        return isItAList() ? toListFormat() : "(" + leftTerm + " " + rightTerm + ")";
     }
 
     @Override
@@ -184,5 +183,13 @@ public class Application implements Term {
         rightType = replaceTypeIfUnknown(rightType, resolvedTypes);
         leftTerm.substituteUnknownTypes(resolvedTypes);
         rightTerm.substituteUnknownTypes(resolvedTypes);
+    }
+
+    private boolean isItAList() {
+        return leftTerm instanceof Application && ((Application) leftTerm).getLeftTerm() instanceof Cons;
+    }
+
+    private String toListFormat() {
+        return "[" + ((Application) leftTerm).getRightTerm() + "," + rightTerm + "]";
     }
 }

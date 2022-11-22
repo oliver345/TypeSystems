@@ -4,7 +4,7 @@ import typed.ski.deep.lang.type.PreType;
 
 import java.util.Map;
 
-public class EmptyList extends ListItem {
+public class EmptyList implements Term {
 
     @Override
     public String toString() {
