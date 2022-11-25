@@ -14,6 +14,6 @@ public class List implements Ty {
 
     @Override
     public String toString() {
-        return "List[" + a + "]";
+        return "List{" + a + "}";
     }
 }

@@ -34,7 +34,7 @@ public class S implements Term {
 
     @Override
     public String toString() {
-        return "S[" + x + ", " + y + ", " + z + "]";
+        return "S{" + x + "}{" + y + "}{" + z + "}";
     }
 
     @Override

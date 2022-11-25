@@ -20,7 +20,7 @@ public class ITE implements Term {
 
     @Override
     public String toString() {
-        return "ITE[" + type + "]";
+        return "ITE{" + type + "}";
     }
 
     @Override
