@@ -29,58 +29,10 @@ public class Application implements Term {
 
     public Term apply() {
 
-        if (leftTerm instanceof S || leftTerm instanceof K || leftTerm instanceof Literal || leftTerm instanceof True ||
-                leftTerm instanceof False || leftTerm instanceof ITE || leftTerm instanceof Rec ||
-                leftTerm instanceof Succ || leftTerm instanceof RecList || leftTerm instanceof Cons) {
-            return this;
-        }
-
-        if (leftTerm instanceof  I) {
-            return rightTerm;
-        }
-
         if (leftTerm instanceof Application) {
             Application subApplication = (Application) leftTerm;
 
-            if (subApplication.getLeftTerm() instanceof S) {
-                return this;
-            }
-
-            if (subApplication.getLeftTerm() instanceof K) {
-                return subApplication.getRightTerm();
-            }
-
-            if (subApplication.getLeftTerm() instanceof ITE) {
-                return this;
-            }
-
-            if (subApplication.getLeftTerm() instanceof Rec) {
-                return this;
-            }
-
-            if (subApplication.getLeftTerm() instanceof RecList) {
-                return this;
-            }
-
-            if (subApplication.getLeftTerm() instanceof Cons) {
-                return this;
-            }
-
             if (subApplication.getLeftTerm() instanceof Application) {
-                if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof S) {
-                    S termS = (S) ((Application) subApplication.getLeftTerm()).getLeftTerm();
-
-                    return new Application(new Function(termS.getY(), termS.getZ()), termS.getY(),
-                            new Application(((Application) subApplication.getLeftTerm()).getRightType(), rightType,
-                                    ((Application) subApplication.getLeftTerm()).getRightTerm(), rightTerm).apply(),
-                            new Application(subApplication.getRightType(), rightType,
-                                    subApplication.getRightTerm(), rightTerm).apply()).apply();
-                }
-
-                if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof ITE) {
-                    return Boolean.parseBoolean(((Application) subApplication.getLeftTerm()).getRightTerm().toString()) ?
-                            subApplication.getRightTerm() : rightTerm;
-                }
 
                 if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof Rec) {
                     Term termZ = ((Application) subApplication.getLeftTerm()).getRightTerm();
@@ -100,10 +52,20 @@ public class Application implements Term {
                                 new Application(
                                         new Function(typeS, new Function(new Nat(), recTypeParam)), typeS,
                                         new Application(typeRec, recTypeParam, termRec, termZ).apply(),
-                                        termS).apply(), /* .apply() ?  */
+                                        termS).apply(),
                                 ((Application) rightTerm).getRightTerm());
                         return new Application(new Function(recTypeParam, recTypeParam), recTypeParam, appSN.apply(), appRec.apply()).apply();
                     }
+                }
+
+                if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof S) {
+                    S termS = (S) ((Application) subApplication.getLeftTerm()).getLeftTerm();
+
+                    return new Application(new Function(termS.getY(), termS.getZ()), termS.getY(),
+                            new Application(((Application) subApplication.getLeftTerm()).getRightType(), rightType,
+                                    ((Application) subApplication.getLeftTerm()).getRightTerm(), rightTerm).apply(),
+                            new Application(subApplication.getRightType(), rightType,
+                                    subApplication.getRightTerm(), rightTerm).apply()).apply();
                 }
 
                 if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof RecList) {
@@ -154,7 +116,46 @@ public class Application implements Term {
                         ).apply();
                     }
                 }
+
+                if (((Application) subApplication.getLeftTerm()).getLeftTerm() instanceof ITE) {
+                    return Boolean.parseBoolean(((Application) subApplication.getLeftTerm()).getRightTerm().toString()) ?
+                            subApplication.getRightTerm() : rightTerm;
+                }
             }
+
+            if (subApplication.getLeftTerm() instanceof Rec) {
+                return this;
+            }
+
+            if (subApplication.getLeftTerm() instanceof K) {
+                return subApplication.getRightTerm();
+            }
+
+            if (subApplication.getLeftTerm() instanceof S) {
+                return this;
+            }
+
+            if (subApplication.getLeftTerm() instanceof Cons) {
+                return this;
+            }
+
+            if (subApplication.getLeftTerm() instanceof RecList) {
+                return this;
+            }
+
+            if (subApplication.getLeftTerm() instanceof ITE) {
+                return this;
+            }
+        }
+
+        if (leftTerm instanceof Succ || leftTerm instanceof K || leftTerm instanceof S || leftTerm instanceof True ||
+                leftTerm instanceof False ||  leftTerm instanceof Rec || leftTerm instanceof Cons || leftTerm instanceof RecList ||
+                leftTerm instanceof ITE || leftTerm instanceof Literal) {
+            return this;
+        }
+
+        if (leftTerm instanceof  I) {
+            return rightTerm;
         }
 
         throw new IllegalStateException();
