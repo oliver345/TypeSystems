@@ -22,6 +22,6 @@ public class Unknown implements PreType {
 
     @Override
     public String toString() {
-        return "Unknown{" + typeId + "}";
+        return "Unknown(" + typeId + ")";
     }
 }

@@ -14,15 +14,10 @@ public class I implements Term {
         this.x = x;
     }
 
-    public PreType getX() {
-        return x;
-    }
-
     @Override
     public String toString() {
-        return "I[" + x + "]";
+        return "I{" + x + "}";
     }
-
 
     @Override
     public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {

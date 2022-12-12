@@ -20,7 +20,7 @@ public class Rec implements Term {
 
     @Override
     public String toString() {
-        return "Rec[" + x + "]";
+        return "Rec{" + x + "}";
     }
 
     @Override

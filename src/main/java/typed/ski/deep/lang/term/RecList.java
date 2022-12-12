@@ -27,7 +27,7 @@ public class RecList implements Term {
 
     @Override
     public String toString() {
-        return "RecList[" + a + ", " + b + "]";
+        return "RecList{" + a + "}{" + b + "}";
     }
 
 

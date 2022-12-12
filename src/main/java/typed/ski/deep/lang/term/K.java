@@ -17,17 +17,9 @@ public class K implements Term {
         this.y = y;
     }
 
-    public PreType getX() {
-        return x;
-    }
-
-    public PreType getY() {
-        return y;
-    }
-
     @Override
     public String toString() {
-        return "K[" + x + ", " + y + "]";
+        return "K{" + x + "}{" + y + "}";
     }
 
     @Override

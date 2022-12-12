@@ -14,10 +14,6 @@ public class Cons implements Term{
         this.listType = listType;
     }
 
-    public PreType getListType() {
-        return listType;
-    }
-
     @Override
     public String toString() {
         return "Cons";

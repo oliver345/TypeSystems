@@ -23,6 +23,6 @@ public class RecListPre_AB implements Preterm {
 
     @Override
     public String toString() {
-        return "RecListPre{" + a + "}{" + b + "}";
+        return "RecList{" + a + "}{" + b + "}";
     }
 }

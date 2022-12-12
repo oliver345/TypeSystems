@@ -204,7 +204,7 @@ public class TypeChecker {
         }
 
         if (parseTree instanceof Lit) {
-            return Optional.of(Pair.of(new Literal(((Lit) parseTree).getName()), new Str()));
+            return Optional.of(Pair.of(new Literal(((Lit) parseTree).getText()), new Str()));
         }
 
         if (parseTree instanceof ZERO) {
@@ -466,7 +466,7 @@ public class TypeChecker {
         }
 
         if (parseTree instanceof Lit) {
-            return Optional.of(Pair.of(new Literal(((Lit) parseTree).getName()), new Str()));
+            return Optional.of(Pair.of(new Literal(((Lit) parseTree).getText()), new Str()));
         }
         throw new IllegalStateException();
     }
