@@ -182,7 +182,7 @@ public class Parser {
             int indexOfColon = token.indexOf(":");
             return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon), definitions), parseType(token.substring(indexOfColon + 1)));
         }
-        else if (token.equals("S") || (token.startsWith("S") && token.contains("}{"))) {
+        else if (token.equals("S") || (token.startsWith("S{") && token.endsWith("}"))) {
             if (token.equals("S")) {
                 return new S();
             }
@@ -194,7 +194,7 @@ public class Parser {
                         parsePreType(parts[2].substring(0, parts[2].length() - 1)));
             }
         }
-        else if (token.equals("K") || (token.startsWith("K") && token.contains("}{"))) {
+        else if (token.equals("K") || (token.startsWith("K{") && token.endsWith("}"))) {
             if (token.equals("K")) {
                 return new K();
             }
@@ -203,7 +203,7 @@ public class Parser {
                 return new K_AB(parsePreType(parts[0].substring(2)), parsePreType(parts[1].substring(0, parts[1].length() - 1)));
             }
         }
-        else if (token.equals("RecList") || (token.startsWith("RecList") && token.contains("}{"))) {
+        else if (token.equals("RecList") || (token.startsWith("RecList{") && token.endsWith("}"))) {
             if (token.equals("RecList")) {
                 return new RecListPre();
             }
@@ -212,7 +212,7 @@ public class Parser {
                 return new RecListPre_AB(parsePreType(parts[0].substring(8)), parsePreType(parts[1].substring(0, parts[1].length() - 1)));
             }
         }
-        else if (token.equals("Rec") || (token.startsWith("Rec") && token.endsWith("}"))) {
+        else if (token.equals("Rec") || (token.startsWith("Rec{") && token.endsWith("}"))) {
             if (token.equals("Rec")) {
                 return new Rec();
             }
@@ -220,7 +220,7 @@ public class Parser {
                 return new Rec_A(parsePreType(token.substring(token.indexOf("{") + 1, token.indexOf("}"))));
             }
         }
-        else if (token.equals("I") || (token.startsWith("I") && token.contains("{"))) {
+        else if (token.equals("I") || (token.startsWith("I{") && token.endsWith("}"))) {
             if (token.equals("I")) {
                 return new I();
             }
