@@ -1,10 +1,4 @@
-import org.apache.commons.lang3.tuple.Pair;
 import typed.ski.deep.SKI;
-import typed.ski.deep.evaluator.Evaluator;
-import typed.ski.deep.parser.Parser;
-import typed.ski.deep.typechecker.TypeChecker;
-
-import java.util.Collections;
 
 public class Main {
     public static void main(String[] args) {
@@ -92,6 +86,9 @@ public class Main {
         //Preterm parseTree = Parser.createParseTree("I:Bool->Bool True");
         //Preterm parseTree = Parser.createParseTree("True:Bool");
 
+
+        /*
+
         System.out.println("teszt");
         System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree("((Succ ZERO):Nat):Nat", null)).map(Pair::getLeft).orElseThrow()));
         System.out.println(SKI.executeCodeLine("Rec True (K (K:Bool->Bool->Bool False)):Nat->Bool->Bool ZERO", Collections.emptyMap()));
@@ -140,6 +137,9 @@ public class Main {
         System.out.println(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree("Cons True (Cons False (Cons True [True,False,True,False,True]))", null))));
 
         System.out.println("---- ----");
+
+
+        */
 
         // List items are not evaluated also!
         SKI.executeCode("[[ZERO,ZERO],[ZERO,ZERO]]");
