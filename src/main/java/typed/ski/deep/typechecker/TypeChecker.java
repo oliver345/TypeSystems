@@ -24,25 +24,25 @@ public class TypeChecker {
 
     private static Map<Integer, PreType> unknownTypes = new HashMap<>();
 
-    public static Term createWellTypedTree(Preterm parseTree) {
+    public static Term createWellTypedTree(Preterm parseTree) throws TypeCheckerException {
         unknownTypes.clear();
 
-        Optional<Pair<Term, PreType>> resultOptional = inferWithPreType(parseTree);
-        if (resultOptional.isPresent()) {
+        Optional<Pair<Term, PreType>> resultOptional = inferWithUnification(parseTree);
 
-            String unknownIds = unknownTypes.entrySet().stream()
-                    .filter(entry -> entry.getValue() instanceof Unknown)
-                    .map(entry -> entry.getKey().toString())
-                    .collect(Collectors.joining(", "));
-            if (!unknownIds.isEmpty()) {
-                throw new IllegalStateException("Could not resolve the type of type-ID(s): " + unknownIds);
-            }
-
-            return resultOptional.get().getLeft();
+        if (resultOptional.isEmpty()) {
+            throw new TypeCheckerException("Could not infer the type of \"" + parseTree.toString() + "\"");
         }
-        return null;
 
-        //Throw exception if empty
+        String unknownIds = unknownTypes.entrySet().stream()
+                .filter(entry -> entry.getValue() instanceof Unknown)
+                .map(entry -> entry.getKey().toString())
+                .collect(Collectors.joining(", "));
+
+        if (!unknownIds.isEmpty()) {
+            throw new TypeCheckerException("Could not resolve the type of type-ID(s): " + unknownIds);
+        }
+
+        return resultOptional.get().getLeft();
     }
 
     public static PreType replaceTypeIfUnknown(PreType preType, Map<Integer, PreType> resolvedTypes) {
@@ -61,8 +61,7 @@ public class TypeChecker {
         }
     }
 
-    //TODO: rename
-    private static Optional<Pair<Term, PreType>> inferWithPreType(Preterm parseTree) {
+    private static Optional<Pair<Term, PreType>> inferWithUnification(Preterm parseTree) throws TypeCheckerException {
         int varCount = unknownTypes.size();
 
         if (parseTree instanceof S) {
@@ -161,12 +160,18 @@ public class TypeChecker {
         }
 
         if (parseTree instanceof App) {
-            Pair<Term, PreType> left = inferWithPreType(((App) parseTree).getLeftTerm()).orElseThrow();
-            Pair<Term, PreType> right = inferWithPreType(((App) parseTree).getRightTerm()).orElseThrow();
+            Optional<Pair<Term, PreType>> optionalLeft = inferWithUnification(((App) parseTree).getLeftTerm());
+            Optional<Pair<Term, PreType>> optionalRight = inferWithUnification(((App) parseTree).getRightTerm());
+            if (optionalLeft.isEmpty() || optionalRight.isEmpty()) {
+                throw new TypeCheckerException("Could not infer the type of preterm: \"" + parseTree.toString() + "\"");
+            }
+
+            Pair<Term, PreType> left = optionalLeft.get();
+            Pair<Term, PreType> right = optionalRight.get();
 
             List<Pair<PreType, PreType>> typeEquations = new ArrayList<>();
 
-            //The size of the list must be queried again, the inferWithPreType() calls could change it
+            //The size of the list must be queried again, the inferWithUnification() calls could change it
             Unknown uknResultType = new Unknown(unknownTypes.size());
             insertIntoUnknownTypes(uknResultType);
 
@@ -187,7 +192,7 @@ public class TypeChecker {
 
         if (parseTree instanceof AnnotatedPreterm) {
 
-            Optional<Pair<Term, PreType>> inferredOptional = inferWithPreType(((AnnotatedPreterm) parseTree).getPreterm());
+            Optional<Pair<Term, PreType>> inferredOptional = inferWithUnification(((AnnotatedPreterm) parseTree).getPreterm());
             if (inferredOptional.isPresent()) {
                 Pair<Term, PreType> pair = inferredOptional.get();
 
@@ -200,7 +205,7 @@ public class TypeChecker {
                 return Optional.of(Pair.of(pair.getLeft(), replaceTypeIfUnknown(pair.getRight(), unknownTypes)));
             }
 
-            throw new IllegalStateException("Could not infer term: " + ((AnnotatedPreterm) parseTree).getPreterm());
+            throw new TypeCheckerException("Could not infer the type of preterm: \"" + ((AnnotatedPreterm) parseTree).getPreterm().toString() + "\"");
         }
 
         if (parseTree instanceof Lit) {
@@ -289,8 +294,7 @@ public class TypeChecker {
         return Optional.empty();
     }
 
-    //TODO: Make private!
-    public static Optional<Pair<Term, PreType>> infer(Preterm parseTree) {
+    private static Optional<Pair<Term, PreType>> infer(Preterm parseTree) throws TypeCheckerException {
 
         if (parseTree instanceof S) {
             PreType a = new Unknown();
@@ -372,7 +376,7 @@ public class TypeChecker {
             Optional<Pair<Term, PreType>> rightWttOpt = infer(((App) parseTree).getRightTerm());
 
             if (rightWttOpt.isEmpty()) {
-                return Optional.empty();
+                throw new TypeCheckerException("Could not infer the type of preterm: \"" + ((App) parseTree).getRightTerm().toString() + "\"");
             }
             Pair<Term, PreType> rightWtt = rightWttOpt.get();
 
@@ -407,12 +411,16 @@ public class TypeChecker {
             Optional<Pair<Term, PreType>> leftWttOpt = infer(leftPreterm);
 
             if (leftWttOpt.isEmpty()) {
-                return Optional.empty();
+                throw new TypeCheckerException("Could not infer the type of preterm: \"" + leftPreterm.toString() + "\"");
             }
             Pair<Term, PreType> leftWtt = leftWttOpt.get();
 
             if (leftWtt.getRight() instanceof Function) {
                 Function leftType = (Function) leftWtt.getRight();
+                if (leftWtt.getLeft() instanceof Cons) {
+                    leftType = (Function) substituteUnknownInPretypeWithType(leftType, new Unknown(), rightWtt.getRight());
+                }
+
                 if (leftType.getInputType() instanceof Unknown) {
                     /*
                     TODO: Simplify:
@@ -430,6 +438,9 @@ public class TypeChecker {
                 if (areTypesEqual(leftType.getInputType(), rightWtt.getRight())) {
                     return Optional.of(Pair.of(new Application(leftType, rightWtt.getRight(), leftWtt.getLeft(), rightWtt.getLeft()), leftType.getResultType()));
                 }
+
+                throw new TypeCheckerException("Type mismatch in application: " + parseTree + "\nType of the function: "
+                        + leftType + "\nType of the argument: " + rightWtt.getRight());
             }
 
             return Optional.empty();
@@ -468,10 +479,12 @@ public class TypeChecker {
         if (parseTree instanceof Lit) {
             return Optional.of(Pair.of(new Literal(((Lit) parseTree).getText()), new Str()));
         }
-        throw new IllegalStateException();
+
+        return Optional.empty();
     }
 
-    private static Map<Integer, PreType> unify(List<Pair<PreType, PreType>> typeEquations, Map<Integer, PreType> unknownTypes) {
+    private static Map<Integer, PreType> unify(List<Pair<PreType, PreType>> typeEquations, Map<Integer, PreType> unknownTypes) throws TypeCheckerException {
+        //TODO: cloning is not needed probably
         Map<Integer, PreType> types = SerializationUtils.clone((HashMap<Integer, PreType>) unknownTypes);
 
         if (!typeEquations.isEmpty()) {
@@ -506,7 +519,7 @@ public class TypeChecker {
                             .collect(Collectors.toList());
                 }
                 else {
-                    throw new IllegalStateException("Could not apply unify rule, one type contains the unknown type\n" +
+                    throw new TypeCheckerException("Could not apply unify rule, one type contains the unknown type\n" +
                             preType + ", " + unknown);
                 }
 
@@ -533,14 +546,14 @@ public class TypeChecker {
             else if (areTypesEqual(pair.getLeft(), pair.getRight())) {
                 return unify(typeEquations, types);
             } else {
-                throw new IllegalStateException("Not matching types: " + pair.getLeft() + ", " + pair.getRight());
+                throw new TypeCheckerException("Not matching types: " + pair.getLeft() + ", " + pair.getRight());
             }
         }
 
         return types;
     }
 
-    private static Optional<Term> check(Preterm parseTree, PreType type) {
+    private static Optional<Term> check(Preterm parseTree, PreType type) throws TypeCheckerException {
         if (parseTree instanceof S || parseTree instanceof S_ABC) {
             if (type instanceof Function && ((Function) type).getInputType() instanceof Function && ((Function) type).getResultType() instanceof Function) {
                 PreType A, B, C;
@@ -551,7 +564,7 @@ public class TypeChecker {
                     C = ((Function) ((Function) ((Function) type).getInputType()).getResultType()).getResultType();
                 }
                 else {
-                    return Optional.empty();
+                    throw new TypeCheckerException("Incorrect expected type for S: " + type);
                 }
 
                 PreType param2 = ((Function) ((Function) type).getResultType()).getInputType();
@@ -559,19 +572,19 @@ public class TypeChecker {
                 if (param2 instanceof Function && param3AndReturnType instanceof Function) {
                     // Compare types of the 2nd param (A->B)
                     if (!areTypesEqual(((Function) param2).getInputType(), A) || !areTypesEqual(((Function) param2).getResultType(), B)) {
-                        return Optional.empty();
+                        throw new TypeCheckerException("Incorrect expected type for S: " + type);
                     }
 
                     // Compare type of the 3rd param (A) and the return type (C)
                     if (!areTypesEqual(((Function) param3AndReturnType).getInputType(), A) || !areTypesEqual(((Function) param3AndReturnType).getResultType(), C)) {
-                        return Optional.empty();
+                        throw new TypeCheckerException("Incorrect expected type for S: " + type);
                     }
 
                     if (parseTree instanceof S_ABC &&
                             ((!(((S_ABC) parseTree).getA() instanceof Unknown) && !areTypesEqual(((S_ABC) parseTree).getA(), A)) ||
                             (!(((S_ABC) parseTree).getB() instanceof Unknown) && !areTypesEqual(((S_ABC) parseTree).getB(), B)) ||
                             (!(((S_ABC) parseTree).getC() instanceof Unknown) && !areTypesEqual(((S_ABC) parseTree).getC(), C)))) {
-                        return Optional.empty();
+                        throw new TypeCheckerException("Preterm incorrectly typed\n" + parseTree.toString() + "\nExpected type: " + type);
                     }
 
                     return Optional.of(new typed.ski.deep.lang.term.S(A, B, C));
@@ -665,7 +678,7 @@ public class TypeChecker {
                 if (parseTree instanceof RecListPre_AB &&
                         ((!(((RecListPre_AB) parseTree).getA() instanceof Unknown) && !areTypesEqual(((RecListPre_AB) parseTree).getA(), A)) ||
                         (!(((RecListPre_AB) parseTree).getB() instanceof Unknown) && !areTypesEqual(((RecListPre_AB) parseTree).getB(), B)))) {
-                    return Optional.empty();
+                    throw new TypeCheckerException("Preterm incorrectly typed\n" + parseTree.toString() + "\nExpected type: " + type);
                 }
 
                 if (A instanceof Unknown && parseTree instanceof RecListPre_AB) {
@@ -682,12 +695,14 @@ public class TypeChecker {
             if (type instanceof Function) {
                 PreType inputType = ((Function) type).getInputType();
                 PreType expectedType = new Function(inputType, new Function(new typed.ski.deep.lang.type.List(inputType), new typed.ski.deep.lang.type.List(inputType)));
-                return areTypesEqual(type, expectedType) ? Optional.of(new Cons(inputType)) : Optional.empty();
+                if (areTypesEqual(type, expectedType)) {
+                    return Optional.of(new Cons(inputType));
+                }
             }
-            return Optional.empty();
+            throw new TypeCheckerException("Preterm incorrectly typed\n" + parseTree + "\nExpected type: " + type);
         }
 
-        return Optional.empty();
+        throw new TypeCheckerException("Type check failed\nThe given type: " + type + " is not compatible with the preterm: " + parseTree);
     }
 
     private static boolean compareFunctions(Function fun1, Function fun2) {
@@ -716,7 +731,7 @@ public class TypeChecker {
     }
 
     /*
-    Used in type chicking of ReclistPre and RecListPre_AB
+    Used in type checking of RecListPre and RecListPre_AB
     Works similarly to areTypesEqual function, but at this point we just want to check the structure of the two given
     types, in order to avoid stucking on Unknown types.
     Unknown types are going to be inferred later.

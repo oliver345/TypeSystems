@@ -6,6 +6,7 @@ import typed.ski.deep.lang.term.Term;
 import typed.ski.deep.parser.Parser;
 import typed.ski.deep.parser.ParserException;
 import typed.ski.deep.typechecker.TypeChecker;
+import typed.ski.deep.typechecker.TypeCheckerException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -85,11 +86,8 @@ public class SKI {
                 }
             }
             catch (ParserException parserException) {
-                System.out.println("Failed to parse code line \"" + codeLine + "\"");
-                parserException.printStackTrace();
+                handleException(parserException, parserException.getMessage());
             }
-            //Catch general exceptions!
-
         });
     }
 
@@ -98,10 +96,14 @@ public class SKI {
             return Optional.of(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions))));
         }
         catch (ParserException parserException) {
-            System.out.println("Could not parse \"" + input + "\"");
-            parserException.printStackTrace();
-            return Optional.empty();
+            handleException(parserException, "Could not parse \"" + input + "\"");
         }
+        catch (TypeCheckerException typeCheckerException) {
+            handleException(typeCheckerException, "Type check failed on \"" + input + "\"");
+        }
+        //Catch general exceptions!
+
+        return Optional.empty();
     }
 
     public static void runInREPL() {
@@ -116,8 +118,14 @@ public class SKI {
 
             switch (input) {
                 case "quit" -> stayInREPL = false;
-                case "list defs" -> definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
-                case "toggle print style" -> prettyPrintStyle = !prettyPrintStyle;
+                case "list defs" -> {
+                    definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
+                    System.out.println("---");
+                }
+                case "toggle print style" -> {
+                    prettyPrintStyle = !prettyPrintStyle;
+                    System.out.println("Pretty printing: " + (prettyPrintStyle ? "ON" : "OFF"));
+                }
                 case "" -> {}
                 default -> executeCode(input, definitions);
             }
@@ -136,6 +144,13 @@ public class SKI {
         }
         else {
             throw new ParserException("Invalid definition key, definition not stored \"" + key + "\"");
+        }
+    }
+
+    private static void handleException(Exception exception, String message) {
+        System.out.println(message);
+        if (!prettyPrintStyle) {
+            exception.printStackTrace(System.out);
         }
     }
 }
