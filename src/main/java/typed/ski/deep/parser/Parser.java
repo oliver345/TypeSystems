@@ -14,7 +14,7 @@ public class Parser {
 
     private static final String TEXT_IN_BRACKETS_PATTERN = "\\([^)]*\\)";
 
-    public static Preterm createParseTree(String input, Map<String, Preterm> definitions) {
+    public static Preterm createParseTree(String input, Map<String, Preterm> definitions) throws ParserException {
         List<Preterm> preterms = new ArrayList<>();
 
         int pos = 0;
@@ -70,10 +70,12 @@ public class Parser {
             appendToListAsPreterms(input.substring(firstNotProcessedPos), preterms, definitions);
         }
 
-        return preterms.size() == 1 ? preterms.get(0) : preterms.stream().reduce(App::new).orElseThrow();
+        return preterms.size() == 1 ? preterms.get(0) : preterms.stream()
+                .reduce(App::new)
+                .orElseThrow(() -> new ParserException("No preterm found after parsing"));
     }
 
-    private static int findEndOfList(String text, int pos) {
+    private static int findEndOfList(String text, int pos) throws ParserException {
         int diff = 1;
         while (pos < text.length()) {
             if (text.charAt(pos) == ']') {
@@ -88,10 +90,10 @@ public class Parser {
             }
             ++pos;
         }
-        throw new IllegalStateException("Invalid parentheses");
+        throw new ParserException("Incorrect list syntax \"" + text + "\"");
     }
 
-    private static Preterm parseList(String input, Map<String, Preterm> definitions) {
+    private static Preterm parseList(String input, Map<String, Preterm> definitions) throws ParserException {
 
         List<Preterm> listItems = new ArrayList<>();
         while (!input.isEmpty()) {
@@ -110,12 +112,13 @@ public class Parser {
         listItems.add(new EmptyListPre());
         Collections.reverse(listItems);
 
+        final String finalInput = input;
         return listItems.stream()
                 .reduce((list, item) -> new App(new App(new ConsPre(), item), list))
-                .orElseThrow();
+                .orElseThrow(() -> new ParserException("No list item found after parsing list for input \"" + finalInput + "\""));
     }
 
-    private static int findListItemSeparator(String input) {
+    private static int findListItemSeparator(String input) throws ParserException {
         if (input.contains(",")) {
             int pos = 0;
             boolean notFound = true;
@@ -126,7 +129,7 @@ public class Parser {
             if (!notFound) {
                 return pos - 1;
             } else {
-                throw new IllegalStateException("Syntax error in list: " + input);
+                throw new ParserException("Incorrect list syntax \"" + input + "\"");
             }
         }
         else {
@@ -134,7 +137,7 @@ public class Parser {
         }
     }
 
-    private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) {
+    private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) throws ParserException {
         int closingPos = findClosingBracket(input, posOfOpeningBracket + 1);
         return closingPos < input.length() - 1 && input.charAt(closingPos + 1) == ':';
     }
@@ -147,7 +150,7 @@ public class Parser {
                 ((input.substring(0, posOfBracket).contains("->") || input.substring(0, posOfBracket).contains(":")) && !input.substring(0, posOfBracket).contains(" "));
     }
 
-    private static int findClosingBracket(String text, int pos) {
+    private static int findClosingBracket(String text, int pos) throws ParserException {
         int diff = 1;
         while (pos < text.length()) {
             if (text.charAt(pos) == ')') {
@@ -162,13 +165,24 @@ public class Parser {
             }
             ++pos;
         }
-        throw new IllegalStateException("Invalid parentheses");
+        throw new ParserException("Invalid parentheses in \"" + text + "\"");
     }
 
     //String without brackets -> tokens -> Preterm -> append one by one
-    private static void appendToListAsPreterms(String input, List<Preterm> preterms, Map<String, Preterm> definitions) {
+    private static void appendToListAsPreterms(String input, List<Preterm> preterms, Map<String, Preterm> definitions) throws ParserException {
         List<String> tokens = getTokens(input);
-        tokens.forEach(token -> preterms.add(tokenToPreterm(token, definitions)));
+        try {
+            tokens.forEach(token -> {
+                try {
+                    preterms.add(tokenToPreterm(token, definitions));
+                } catch (ParserException parserException) {
+                    throw new RuntimeException(parserException);
+                }
+            });
+        }
+        catch (Exception exception) {
+            throw new ParserException(exception);
+        }
     }
 
     private static List<String> getTokens(String input) {
@@ -177,7 +191,7 @@ public class Parser {
                 .collect(Collectors.toList());
     }
 
-    private static Preterm tokenToPreterm(String token, Map<String, Preterm> definitions) {
+    private static Preterm tokenToPreterm(String token, Map<String, Preterm> definitions) throws ParserException {
         if (token.contains(":")) {
             int indexOfColon = token.indexOf(":");
             return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon), definitions), parseType(token.substring(indexOfColon + 1)));
@@ -275,11 +289,11 @@ public class Parser {
         }
     }
 
-    private static PreType parsePreType(String input) {
+    private static PreType parsePreType(String input) throws ParserException {
         return input.isEmpty() ? new Unknown() : parseType(input);
     }
 
-    private static PreType parseType(String input) {
+    private static PreType parseType(String input) throws ParserException {
         if (input.equals("Bool")) {
             return new Bool();
         }
@@ -317,7 +331,8 @@ public class Parser {
             PreType typeParam = parsePreType(input.substring(5, input.length() - 1));
             return new typed.ski.deep.lang.type.List(typeParam);
         }
-        throw new IllegalStateException("Could not parse to Ty, invalid token: " + input);
+
+        throw new ParserException("\"" + input + "\" can not be parsed to any type");
     }
 
     private static boolean areParenthesesValid(String input, boolean roundParentheses) {

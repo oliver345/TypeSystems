@@ -4,7 +4,9 @@ import typed.ski.deep.evaluator.Evaluator;
 import typed.ski.deep.lang.preterm.Preterm;
 import typed.ski.deep.lang.term.Term;
 import typed.ski.deep.parser.Parser;
+import typed.ski.deep.parser.ParserException;
 import typed.ski.deep.typechecker.TypeChecker;
+import typed.ski.deep.typechecker.TypeCheckerException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,20 +72,38 @@ public class SKI {
         final Map<String, Preterm> finalDefs = definitions == null ? new LinkedHashMap<>() : definitions;
 
         Stream.of(codeLines).forEach(codeLine -> {
-            String[] parts = codeLine.trim().split("=");
-            switch (parts.length) {
-                case 2 -> storeDefinition(parts[0], parts[1], finalDefs);
-                case 1 -> {
-                    Term result = executeCodeLine(parts[0], finalDefs);
-                    System.out.println(parts[0] + " ==> " + result.toString(prettyPrintStyle));
+            try {
+                String[] parts = codeLine.trim().split("=");
+                switch (parts.length) {
+                    case 2 -> storeDefinition(parts[0], parts[1], finalDefs);
+                    case 1 -> {
+                        String result = executeCodeLine(parts[0], finalDefs)
+                                .map(term -> term.toString(prettyPrintStyle))
+                                .orElse("<<NO RESULT>>");
+                        System.out.println(parts[0] + " ==> " + result);
+                    }
+                    default -> System.out.println("Invalid statement \"" + codeLine + "\"");
                 }
-                default -> throw new IllegalStateException("Invalid statement: " + codeLine);
+            }
+            catch (ParserException parserException) {
+                handleException(parserException, parserException.getMessage());
             }
         });
     }
 
-    public static Term executeCodeLine(String input, Map<String, Preterm> definitions) {
-        return Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions)));
+    private static Optional<Term> executeCodeLine(String input, Map<String, Preterm> definitions) {
+        try {
+            return Optional.of(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions))));
+        }
+        catch (ParserException parserException) {
+            handleException(parserException, "Could not parse \"" + input + "\"");
+        }
+        catch (TypeCheckerException typeCheckerException) {
+            handleException(typeCheckerException, "Type check failed on \"" + input + "\"");
+        }
+        //Catch general exceptions!
+
+        return Optional.empty();
     }
 
     public static void runInREPL() {
@@ -98,21 +118,39 @@ public class SKI {
 
             switch (input) {
                 case "quit" -> stayInREPL = false;
-                case "list defs" -> definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
-                case "toggle print style" -> prettyPrintStyle = !prettyPrintStyle;
+                case "list defs" -> {
+                    definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
+                    System.out.println("---");
+                }
+                case "toggle print style" -> {
+                    prettyPrintStyle = !prettyPrintStyle;
+                    System.out.println("Pretty printing: " + (prettyPrintStyle ? "ON" : "OFF"));
+                }
                 case "" -> {}
                 default -> executeCode(input, definitions);
             }
         }
     }
 
-    private static void storeDefinition(String key, String statement, Map<String, Preterm> definitions) {
+    private static void storeDefinition(String key, String statement, Map<String, Preterm> definitions) throws ParserException {
         if (!reservedTokens.contains(key) && key.matches("[^(:)\\]\\[<>{}=\\s-]+")) {
-            definitions.put(key, Parser.createParseTree(statement, definitions));
-            System.out.println("Definition stored:\n" + key + " = " + statement);
+            try {
+                definitions.put(key, Parser.createParseTree(statement, definitions));
+                System.out.println("Definition stored:\n" + key + " = " + statement);
+            }
+            catch (Exception exception) {
+                throw new ParserException("Could not store definition because parsing error", exception);
+            }
         }
         else {
-            throw new IllegalStateException("Invalid definition key: " + key);
+            throw new ParserException("Invalid definition key, definition not stored \"" + key + "\"");
+        }
+    }
+
+    private static void handleException(Exception exception, String message) {
+        System.out.println(message);
+        if (!prettyPrintStyle) {
+            exception.printStackTrace(System.out);
         }
     }
 }
