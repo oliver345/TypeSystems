@@ -36,25 +36,13 @@ public class SKI {
     public static void main(String[] args) {
 
         Stream.of(args)
-                .filter(arg -> arg.startsWith("-simplePrintStyle"))
-                .findAny()
-                .ifPresent(arg -> prettyPrintStyle = false);
-
-        Stream.of(args)
                 .filter(arg -> arg.startsWith("-eval"))
                 .findAny()
                 .ifPresentOrElse(arg -> {
                     int posOfEqual = arg.indexOf("=");
                     if (posOfEqual > -1) {
                         String sourcePath = arg.substring(posOfEqual + 1);
-                        Path path = Paths.get(sourcePath);
-                        try {
-                            String code = Files.lines(path).collect(Collectors.joining());
-                            executeCode(code);
-                        }
-                        catch (IOException ioException) {
-                            throw new RuntimeException(ioException);
-                        }
+                        loadFileInput(sourcePath);
                     }
                     else {
                         throw new IllegalArgumentException(arg);
@@ -91,6 +79,26 @@ public class SKI {
         });
     }
 
+    private static void loadFileInput(String filePath) {
+        loadFileInput(filePath, null);
+    }
+
+    private static void loadFileInput(String filePath, Map<String, Preterm> definitions) {
+        Path path = Paths.get(filePath);
+        if (path.toFile().exists()) {
+            try {
+                String code = Files.lines(path).collect(Collectors.joining());
+                executeCode(code, definitions);
+            }
+            catch (IOException ioException) {
+                throw new RuntimeException(ioException);
+            }
+        }
+        else {
+            System.out.println("Input file doesn't exist: \"" + filePath + "\"");
+        }
+    }
+
     private static Optional<Term> executeCodeLine(String input, Map<String, Preterm> definitions) {
         try {
             return Optional.of(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions))));
@@ -116,18 +124,22 @@ public class SKI {
         while (stayInREPL) {
             String input = scanner.nextLine();
 
-            switch (input) {
-                case "quit" -> stayInREPL = false;
-                case "list defs" -> {
-                    definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
-                    System.out.println("---");
-                }
-                case "toggle print style" -> {
-                    prettyPrintStyle = !prettyPrintStyle;
-                    System.out.println("Pretty printing: " + (prettyPrintStyle ? "ON" : "OFF"));
-                }
-                case "" -> {}
-                default -> executeCode(input, definitions);
+            if (input.equals("quit")) {
+                stayInREPL = false;
+            }
+            else if (input.equals("list defs")) {
+                definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
+                System.out.println("---");
+            }
+            else if (input.equals("toggle print style")) {
+                prettyPrintStyle = !prettyPrintStyle;
+                System.out.println("Pretty printing: " + (prettyPrintStyle ? "ON" : "OFF"));
+            }
+            else if (input.startsWith("load ")) {
+                loadFileInput(input.substring("load ".length()), definitions);
+            }
+            else if (!input.isEmpty()) {
+                executeCode(input, definitions);
             }
         }
     }
