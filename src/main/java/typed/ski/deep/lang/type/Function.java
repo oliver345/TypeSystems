@@ -21,6 +21,6 @@ public class Function implements Ty {
 
     @Override
     public String toString() {
-        return inputType + "->" + resultType;
+        return "(" + inputType + "->" + resultType + ")";
     }
 }
