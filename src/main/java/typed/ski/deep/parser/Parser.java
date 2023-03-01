@@ -5,8 +5,6 @@ import typed.ski.deep.lang.type.*;
 
 import java.util.List;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -311,19 +309,27 @@ public class Parser {
             }
 
             int indexOfArrow = input.indexOf("->");
+            int indexOfBracketOpen = input.indexOf('(');
+            int indexOfBracketClose = -1;
+            boolean hasBrackets = false;
+            if (indexOfBracketOpen >= 0) {
+                hasBrackets = true;
+                indexOfBracketClose = findClosingBracket(input, indexOfBracketOpen + 1);
+            }
+            
+            if (hasBrackets) {
+                System.out.println(input.substring(indexOfBracketOpen + 1, indexOfBracketClose));
+            }
 
-            Matcher matcher = Pattern.compile(TEXT_IN_BRACKETS_PATTERN).matcher(input);
-            boolean hasBrackets = matcher.find();
-
-            if (!hasBrackets || !(indexOfArrow > matcher.start() && indexOfArrow < matcher.end())) {
+            if (!hasBrackets || !(indexOfArrow > indexOfBracketOpen && indexOfArrow < indexOfBracketClose)) {
                 return new Function(parseType(input.substring(0, indexOfArrow)), parseType(input.substring(indexOfArrow + 2)));
             }
             else {
-                if (input.length() > matcher.end()) {
-                    return new Function(parseType(input.substring(matcher.start() + 1, matcher.end() - 1)), parseType(input.substring(matcher.end() + 2)));
+                if (input.length() > indexOfBracketClose + 1) {
+                    return new Function(parseType(input.substring(indexOfBracketOpen + 1, indexOfBracketClose)), parseType(input.substring(indexOfBracketClose + 3)));
                 }
                 else {
-                    return parseType(input.substring(matcher.start() + 1, matcher.end() - 1));
+                    return parseType(input.substring(indexOfBracketOpen + 1, indexOfBracketClose));
                 }
             }
         }
