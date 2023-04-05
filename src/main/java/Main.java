@@ -1,7 +1,26 @@
 import typed.ski.deep.SKI;
 
 public class Main {
+
     public static void main(String[] args) {
+
+        SKI.executeCode("B=S (K S) K;" +
+                "B K Succ ZERO False");
+
+        //LE=Rec (K True) (K (S (K (Rec False)) (S (K K))));
+        /*ShallowSKI.<Function<Integer, Boolean>>rec()  //Rec
+                .apply(ShallowSKI.<Boolean, Integer>k().apply(true))  //(K True)
+                .apply(ShallowSKI.<Function<Function<Integer, Boolean>, Function<Integer, Boolean>>, Integer>k().apply(ShallowSKI.<Function<Integer, Boolean>, Function<Integer, Function<Boolean, Boolean>>, Function<Integer, Boolean>>s()  //(K (S
+                        .apply(ShallowSKI.<Function<Function<Integer, Function<Boolean, Boolean>>, Function<Integer, Boolean>>, Function<Integer, Boolean>>k().apply(ShallowSKI.<Boolean>rec().apply(false)))  //(K (Rec False))
+                        .apply(ShallowSKI.<Integer, Boolean, Function<Boolean, Boolean>>s().apply(ShallowSKI.<Function<Boolean, Function<Boolean, Boolean>>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k())))))  //(S (K K))  ))
+                .apply(2)
+                .apply(5);*/
+
+        /*Function<Integer, Function<Integer, Boolean>> shallowLE = ShallowSKI.<Function<Integer, Boolean>>rec().apply(ShallowSKI.<Boolean, Integer>k().apply(true)).apply(ShallowSKI.<Function<Function<Integer, Boolean>, Function<Integer, Boolean>>, Integer>k().apply(ShallowSKI.<Function<Integer, Boolean>, Function<Integer, Function<Boolean, Boolean>>, Function<Integer, Boolean>>s().apply(ShallowSKI.<Function<Function<Integer, Function<Boolean, Boolean>>, Function<Integer, Boolean>>, Function<Integer, Boolean>>k().apply(ShallowSKI.<Boolean>rec().apply(false))).apply(ShallowSKI.<Integer, Boolean, Function<Boolean, Boolean>>s().apply(ShallowSKI.<Function<Boolean, Function<Boolean, Boolean>>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k())))));
+        System.out.println(shallowLE.apply(35).apply(25));
+        //System.out.println(ShallowSKI.LE.apply(2).apply(5));
+        //5-6 mins
+        System.out.println(shallowLE.apply(25).apply(35));*/
 
         SKI.executeCode("L=[ZERO,Succ ZERO];" +
                 "S K I True;" +

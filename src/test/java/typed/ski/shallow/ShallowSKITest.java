@@ -50,4 +50,26 @@ class ShallowSKITest {
         Assertions.assertEquals(ShallowSKI.<Boolean>rec().apply(true).apply(ShallowSKI.<Function<Boolean, Boolean>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k().apply(false))).apply(5),
                 false);
     }
+
+    @Test
+    void b() {
+        //B Succ I ZERO ==> 1
+        Assertions.assertEquals(ShallowSKI.<Integer, Integer, Integer>nativeB().apply(ShallowSKI.<Integer, Integer>succ()).apply(ShallowSKI.<Integer>i()).apply(0), 1);
+        Assertions.assertEquals(ShallowSKI.<Integer, Integer, Integer>b().apply(ShallowSKI.<Integer, Integer>succ()).apply(ShallowSKI.<Integer>i()).apply(0), 1);
+    }
+
+    @Test
+    void c() {
+        //C I 0 Succ ==> 1
+        System.out.println(ShallowSKI.<Function<Integer, Integer>, Integer, Integer>nativeC().apply(ShallowSKI.<Function<Integer, Integer>>i()).apply(0).apply(ShallowSKI.succ()));
+    }
+
+    @Test
+    void LE() {
+        System.out.println("Testing LE");
+        System.out.println("35, 25");
+        boolean result = ShallowSKI.LE.apply(35).apply(25);
+        System.out.println(result);
+    }
+
 }
