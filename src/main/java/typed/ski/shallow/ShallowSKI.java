@@ -1,5 +1,6 @@
 package typed.ski.shallow;
 
+import java.util.List;
 import java.util.function.Function;
 
 public abstract class ShallowSKI {
@@ -30,5 +31,50 @@ public abstract class ShallowSKI {
 
     public static <A> Function<A, Function<Function<Integer, Function<A, A>>, Function<Integer, A>>> rec() {
         return z -> (s -> (i -> i == 0 ? z : s.apply(i - 1).apply(ShallowSKI.<A>rec().apply(z).apply(s).apply(i - 1))));
+
+    }
+
+    public static <A, B> Function<B, Function<Function<A, Function<List<A>, Function<B, B>>>, Function<List<A>, B>>> recList() {
+        return z -> (c -> (l ->
+                l.isEmpty() ? z : c.apply(l.get(0)).apply(l.subList(1, l.size())).apply(ShallowSKI.<A, B>recList().apply(z).apply(c).apply(l.subList(1, l.size())))));
+    }
+
+    public static <A> Function<A, Function<List<A>, List<A>>> cons() {
+        return a -> (l -> {
+            l.add(0, a);
+            return l;
+        });
+    }
+
+    public static Function<Integer, Function<Integer, Boolean>> LE =
+            ShallowSKI.<Function<Integer, Boolean>>rec()  //Rec
+                    .apply(ShallowSKI.<Boolean, Integer>k().apply(true))  //(K True)
+                    .apply(ShallowSKI.<Function<Function<Integer, Boolean>, Function<Integer, Boolean>>, Integer>k().apply(ShallowSKI.<Function<Integer, Boolean>, Function<Integer, Function<Boolean, Boolean>>, Function<Integer, Boolean>>s()  //(K (S
+                            .apply(ShallowSKI.<Function<Function<Integer, Function<Boolean, Boolean>>, Function<Integer, Boolean>>, Function<Integer, Boolean>>k().apply(ShallowSKI.<Boolean>rec().apply(false)))  //(K (Rec False))
+                            .apply(ShallowSKI.<Integer, Boolean, Function<Boolean, Boolean>>s().apply(ShallowSKI.<Function<Boolean, Function<Boolean, Boolean>>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k())))));  //(S (K K))  ))
+
+    public static <A, B, C> Function<Function<B, C>, Function<Function<A, B>, Function<A, C>>> nativeB() {
+        return f -> (g -> (a -> f.apply(g.apply(a))));
+    }
+
+    public static <A, B, C> Function<Function<B, C>, Function<Function<A, B>, Function<A, C>>> b() {
+        //S (K S) K
+       return ShallowSKI.<Function<B, C>, Function<A, Function<B, C>>, Function<Function<A, B>, Function<A,C>>>s()
+               .apply(ShallowSKI.<Function<Function<A, Function<B, C>>, Function<Function<A, B>, Function<A, C>>>, Function<B, C>>k().apply(ShallowSKI.<A, B, C>s()))
+               .apply(ShallowSKI.<Function<B, C>, A>k());
+    }
+
+    public static <A, B, C> Function<Function<A, Function<B, C>>, Function<B, Function<A, C>>> nativeC() {
+        return f -> (g -> (a -> f.apply(a).apply(g)));
+    }
+
+    public static <A, B, C> Function<Function<A, Function<B, C>>, Function<B, Function<A, C>>> c() {
+        //S (S (K B) S) (K K)
+        //1.
+        //return ShallowSKI.<Function<A, A>, Function<B, Function<A, B>>, Function<B, Function<A, C>>>s().apply(ShallowSKI.<Function<A, A>, Function<Function<A, B>, Function<A, C>>, Function<Function<B, Function<A, B>>, Function<B, Function<A, C>>>>s().apply(ShallowSKI.<Function<Function<Function<A, B>, Function<A, C>>, Function<Function<B, Function<A, B>>, Function<B, Function<A, C>>>>, Function<A, A>>k().apply(ShallowSKI.nativeB())).apply(ShallowSKI.<A, B, C>s())).apply(ShallowSKI.<B, Function<A, B>>k().apply(ShallowSKI.<B, A>k()));
+
+        //2.
+        //return ShallowSKI.<Function<A, Function<B, C>>, Function<B, Function<A, B>>, Function<B, Function<A, C>>>s().apply(ShallowSKI.<Function<A, A>, Function<Function<A, B>, Function<A, C>>, Function<Function<B, Function<A, B>>, Function<B, Function<A, C>>>>s().apply(ShallowSKI.<Function<Function<Function<A, B>, Function<A, C>>, Function<Function<B, Function<A, B>>, Function<B, Function<A, C>>>>, Function<A, A>>k().apply(ShallowSKI.<B, Function<A, B>, Function<A, C>>nativeB())).apply(ShallowSKI.<A, B, C>s())).apply(ShallowSKI.<B, Function<A, B>>k().apply(ShallowSKI.<B, A>k()));
+        return null;
     }
 }

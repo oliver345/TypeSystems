@@ -18,6 +18,8 @@ import java.util.stream.Stream;
 
 public class SKI {
 
+    //B=S (K S) K;C=S (S (K B) S) (K K);toggle print style
+
     public static final String LE = "Rec (K True) (K (S (K (Rec False))(S (K K))))";
 
     public static final String B = "S (K S) K";
