@@ -1,8 +1,31 @@
+import java.util.HashMap;
+
 import typed.ski.deep.SKI;
+import typed.ski.deep.lang.term.Term;
+import typed.ski.deep.parser.Parser;
+import typed.ski.deep.typechecker.TypeChecker;
+import typed.ski.shallow.ShallowSKI;
 
 public class Main {
 
+    private static void convertDeepToShallow(String input) {
+        try {
+            Term term = TypeChecker.createWellTypedTree(Parser.createParseTree(input, new HashMap<>()));
+            Object result = ShallowSKI.termToShallow(term);
+            System.out.println(result);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
+
+        convertDeepToShallow("K False ZERO");
+        convertDeepToShallow("K I False True");
+        convertDeepToShallow("S K I ZERO");
+        convertDeepToShallow("S (K S) K K Succ ZERO False");
+        convertDeepToShallow("Cons 8 [5, 10, 7]");
 
         SKI.executeCode("B=S (K S) K;" +
                 "B K Succ ZERO False");

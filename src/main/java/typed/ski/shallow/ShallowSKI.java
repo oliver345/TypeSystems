@@ -1,7 +1,24 @@
 package typed.ski.shallow;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+
+import typed.ski.deep.lang.term.Application;
+import typed.ski.deep.lang.term.Cons;
+import typed.ski.deep.lang.term.EmptyList;
+import typed.ski.deep.lang.term.False;
+import typed.ski.deep.lang.term.I;
+import typed.ski.deep.lang.term.ITE;
+import typed.ski.deep.lang.term.K;
+import typed.ski.deep.lang.term.Literal;
+import typed.ski.deep.lang.term.Rec;
+import typed.ski.deep.lang.term.RecList;
+import typed.ski.deep.lang.term.S;
+import typed.ski.deep.lang.term.Succ;
+import typed.ski.deep.lang.term.Term;
+import typed.ski.deep.lang.term.True;
+import typed.ski.deep.lang.term.ZERO;
 
 public abstract class ShallowSKI {
 
@@ -76,5 +93,52 @@ public abstract class ShallowSKI {
         //2.
         //return ShallowSKI.<Function<A, Function<B, C>>, Function<B, Function<A, B>>, Function<B, Function<A, C>>>s().apply(ShallowSKI.<Function<A, A>, Function<Function<A, B>, Function<A, C>>, Function<Function<B, Function<A, B>>, Function<B, Function<A, C>>>>s().apply(ShallowSKI.<Function<Function<Function<A, B>, Function<A, C>>, Function<Function<B, Function<A, B>>, Function<B, Function<A, C>>>>, Function<A, A>>k().apply(ShallowSKI.<B, Function<A, B>, Function<A, C>>nativeB())).apply(ShallowSKI.<A, B, C>s())).apply(ShallowSKI.<B, Function<A, B>>k().apply(ShallowSKI.<B, A>k()));
         return null;
+    }
+
+
+    //Evaluates Deep implemented Term by Shallow implementation
+    public static Object termToShallow(Term term) {
+        if (term instanceof Application app) {
+            return ((Function) termToShallow(app.getLeftTerm())).apply(termToShallow(app.getRightTerm()));
+        }
+        if (term instanceof Cons) {
+            return ShallowSKI.cons();
+        }
+        if (term instanceof EmptyList) {
+            return new ArrayList<>();
+        }
+        if (term instanceof False) {
+            return false;
+        }if (term instanceof I) {
+            return ShallowSKI.i();
+        }
+        if (term instanceof ITE) {
+            return ShallowSKI.ITE();
+        }
+        if (term instanceof K) {
+            return ShallowSKI.k();
+        }
+        if (term instanceof Literal) {
+            return term.toString();
+        }
+        if (term instanceof Rec) {
+            return ShallowSKI.rec();
+        }
+        if (term instanceof RecList) {
+            return ShallowSKI.recList();
+        }
+        if (term instanceof S) {
+            return ShallowSKI.s();
+        }
+        if (term instanceof Succ) {
+            return ShallowSKI.succ();
+        }
+        if (term instanceof True) {
+            return true;
+        }
+        if (term instanceof ZERO) {
+            return 0;
+        }
+        throw new IllegalArgumentException();
     }
 }
