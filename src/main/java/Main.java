@@ -1,8 +1,15 @@
 import typed.ski.deep.SKI;
+import typed.ski.shallow.ShallowSKI;
 
 public class Main {
 
     public static void main(String[] args) {
+
+        ShallowSKI.runFromString("K False ZERO");
+        ShallowSKI.runFromString("K I False True");
+        ShallowSKI.runFromString("S K I ZERO");
+        ShallowSKI.runFromString("S (K S) K K Succ ZERO False");
+        ShallowSKI.runFromString("Cons 8 [5, 10, 7]");
 
         SKI.executeCode("B=S (K S) K;" +
                 "B K Succ ZERO False");
