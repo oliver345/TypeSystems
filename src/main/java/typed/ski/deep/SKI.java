@@ -7,6 +7,7 @@ import typed.ski.deep.parser.Parser;
 import typed.ski.deep.parser.ParserException;
 import typed.ski.deep.typechecker.TypeChecker;
 import typed.ski.deep.typechecker.TypeCheckerException;
+import typed.ski.shallow.ShallowSKI;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -103,7 +104,11 @@ public class SKI {
 
     private static Optional<Term> executeCodeLine(String input, Map<String, Preterm> definitions) {
         try {
-            return Optional.of(Evaluator.eval(TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions))));
+            Term wellTypedTree = TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions));
+            System.out.println("--- Shallow evaluated ---");
+            System.out.println(ShallowSKI.termToShallow(wellTypedTree));
+            System.out.println("--- --- --- ---");
+            return Optional.of(Evaluator.eval(wellTypedTree));
         }
         catch (ParserException parserException) {
             handleException(parserException, "Could not parse \"" + input + "\"");

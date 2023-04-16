@@ -23,6 +23,15 @@ dependencies {
     configurations.implementation.extendsFrom(configurations.extraLibs)
 }
 
+//To enable java18 preview features
+tasks.withType(JavaCompile).each {
+    it.options.compilerArgs.add('--enable-preview')
+}
+
+test {
+    jvmArgs(['--enable-preview'])
+}
+
 jar {
     from {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }

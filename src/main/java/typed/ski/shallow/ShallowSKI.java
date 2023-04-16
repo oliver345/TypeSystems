@@ -1,24 +1,13 @@
 package typed.ski.shallow;
 
+import typed.ski.deep.lang.term.*;
+import typed.ski.deep.parser.Parser;
+import typed.ski.deep.typechecker.TypeChecker;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
-
-import typed.ski.deep.lang.term.Application;
-import typed.ski.deep.lang.term.Cons;
-import typed.ski.deep.lang.term.EmptyList;
-import typed.ski.deep.lang.term.False;
-import typed.ski.deep.lang.term.I;
-import typed.ski.deep.lang.term.ITE;
-import typed.ski.deep.lang.term.K;
-import typed.ski.deep.lang.term.Literal;
-import typed.ski.deep.lang.term.Rec;
-import typed.ski.deep.lang.term.RecList;
-import typed.ski.deep.lang.term.S;
-import typed.ski.deep.lang.term.Succ;
-import typed.ski.deep.lang.term.Term;
-import typed.ski.deep.lang.term.True;
-import typed.ski.deep.lang.term.ZERO;
 
 public abstract class ShallowSKI {
 
@@ -140,5 +129,16 @@ public abstract class ShallowSKI {
             return 0;
         }
         throw new IllegalArgumentException();
+    }
+
+    public static void runFromString(String input) {
+        try {
+            Term term = TypeChecker.createWellTypedTree(Parser.createParseTree(input, new HashMap<>()));
+            System.out.println(ShallowSKI.termToShallow(term));
+        }
+        catch (Exception exception) {
+            System.out.println("Something went wrong for input: " + input);
+            exception.printStackTrace();
+        }
     }
 }
