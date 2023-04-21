@@ -36,6 +36,10 @@ public class SKI {
 
     private static boolean prettyPrintStyle = true;
 
+    private static boolean stayInREPL = true;
+
+    private static boolean shallowEnabled = true;
+
     public static void main(String[] args) {
 
         Stream.of(args)
@@ -63,21 +67,43 @@ public class SKI {
         final Map<String, Preterm> finalDefs = definitions == null ? new LinkedHashMap<>() : definitions;
 
         Stream.of(codeLines).forEach(codeLine -> {
-            try {
-                String[] parts = codeLine.trim().split("=");
-                switch (parts.length) {
-                    case 2 -> storeDefinition(parts[0], parts[1], finalDefs);
-                    case 1 -> {
-                        String result = executeCodeLine(parts[0], finalDefs)
-                                .map(term -> term.toString(prettyPrintStyle))
-                                .orElse("<<NO RESULT>>");
-                        System.out.println(parts[0] + " ==> " + result);
-                    }
-                    default -> System.out.println("Invalid statement \"" + codeLine + "\"");
+            if (stayInREPL) {
+                if (codeLine.equals("quit")) {
+                    stayInREPL = false;
                 }
-            }
-            catch (ParserException parserException) {
-                handleException(parserException, parserException.getMessage());
+                else if (codeLine.equals("list defs")) {
+                    finalDefs.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
+                    System.out.println("---");
+                }
+                else if (codeLine.equals("toggle print style")) {
+                    prettyPrintStyle = !prettyPrintStyle;
+                    System.out.println("Pretty printing: " + (prettyPrintStyle ? "ON" : "OFF"));
+                }
+                else if (codeLine.equals("toggle shallow eval")) {
+                    shallowEnabled = !shallowEnabled;
+                    System.out.println("Shallow evaluation: " + (shallowEnabled ? "ON" : "OFF"));
+                }
+                else if (codeLine.startsWith("load ")) {
+                    loadFileInput(codeLine.substring("load ".length()), finalDefs);
+                }
+                else {
+                    try {
+                        String[] parts = codeLine.trim().split("=");
+                        switch (parts.length) {
+                            case 2 -> storeDefinition(parts[0], parts[1], finalDefs);
+                            case 1 -> {
+                                String result = executeCodeLine(parts[0], finalDefs)
+                                        .map(term -> term.toString(prettyPrintStyle))
+                                        .orElse("<<NO RESULT>>");
+                                System.out.println(parts[0] + " ==> " + result);
+                            }
+                            default -> System.out.println("Invalid statement \"" + codeLine + "\"");
+                        }
+                    }
+                    catch (ParserException parserException) {
+                        handleException(parserException, parserException.getMessage());
+                    }
+                }
             }
         });
     }
@@ -89,8 +115,8 @@ public class SKI {
     private static void loadFileInput(String filePath, Map<String, Preterm> definitions) {
         Path path = Paths.get(filePath);
         if (path.toFile().exists()) {
-            try {
-                String code = Files.lines(path).collect(Collectors.joining());
+            try (Stream<String> fileStream = Files.lines(path)) {
+                String code = fileStream.collect(Collectors.joining());
                 executeCode(code, definitions);
             }
             catch (IOException ioException) {
@@ -105,9 +131,11 @@ public class SKI {
     private static Optional<Term> executeCodeLine(String input, Map<String, Preterm> definitions) {
         try {
             Term wellTypedTree = TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions));
-            System.out.println("--- Shallow evaluated ---");
-            System.out.println(ShallowSKI.termToShallow(wellTypedTree));
-            System.out.println("--- --- --- ---");
+            if (shallowEnabled) {
+                System.out.println("--- Shallow evaluated ---");
+                System.out.println(ShallowSKI.termToShallow(wellTypedTree));
+                System.out.println("--- --- --- ---");
+            }
             return Optional.of(Evaluator.eval(wellTypedTree));
         }
         catch (ParserException parserException) {
@@ -125,27 +153,13 @@ public class SKI {
         System.out.println("Welcome to Typed SKI!");
         Map<String, Preterm> definitions = new LinkedHashMap<>();
 
-        boolean stayInREPL = true;
+        stayInREPL = true;
         Scanner scanner = new Scanner(System.in);
 
         while (stayInREPL) {
             String input = scanner.nextLine();
 
-            if (input.equals("quit")) {
-                stayInREPL = false;
-            }
-            else if (input.equals("list defs")) {
-                definitions.forEach((key, value) -> System.out.println(key.concat(" = ").concat(value.toString())));
-                System.out.println("---");
-            }
-            else if (input.equals("toggle print style")) {
-                prettyPrintStyle = !prettyPrintStyle;
-                System.out.println("Pretty printing: " + (prettyPrintStyle ? "ON" : "OFF"));
-            }
-            else if (input.startsWith("load ")) {
-                loadFileInput(input.substring("load ".length()), definitions);
-            }
-            else if (!input.isEmpty()) {
+            if (!input.isEmpty()) {
                 executeCode(input, definitions);
             }
         }
