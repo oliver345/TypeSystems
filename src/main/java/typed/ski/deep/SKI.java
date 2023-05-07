@@ -31,6 +31,18 @@ public class SKI {
 
     public static final String INSERTION_SORT = "RecList [] (S (K K) INSERT)";
 
+    public static final String ADD = "C Rec (K Succ)";
+
+    public static final String MUL = "B (Rec ZERO) ((B K) ADD)";
+
+    public static final String FAC = "((Rec (Succ ZERO)) ((B MUL) Succ))";
+
+    public static final String CASE = "C (B B Rec) (B K)";
+
+    public static final String ITER = "C (B B Rec) K";
+
+    public static final String LE_ITER = "ITER (K True) (CASE False)";
+
     private static final List<String> reservedTokens = List.of("S", "K", "I", "False", "True", "ITE", "Rec", "Succ",
             "ZERO", "Bool", "Nat", "Str", "RecList", "Cons", "quit", "List");
 
@@ -38,7 +50,7 @@ public class SKI {
 
     private static boolean stayInREPL = true;
 
-    private static boolean shallowEnabled = true;
+    private static boolean shallowEnabled = false;
 
     public static void main(String[] args) {
 

@@ -131,7 +131,7 @@ public abstract class ShallowSKI {
         throw new IllegalArgumentException();
     }
 
-    public static void runFromString(String input) {
+    public static void stringToShallow(String input) {
         try {
             Term term = TypeChecker.createWellTypedTree(Parser.createParseTree(input, new HashMap<>()));
             System.out.println(ShallowSKI.termToShallow(term));
