@@ -5,11 +5,11 @@ public class Main {
 
     public static void main(String[] args) {
 
-        ShallowSKI.runFromString("K False ZERO");
-        ShallowSKI.runFromString("K I False True");
-        ShallowSKI.runFromString("S K I ZERO");
-        ShallowSKI.runFromString("S (K S) K K Succ ZERO False");
-        ShallowSKI.runFromString("Cons 8 [5, 10, 7]");
+        ShallowSKI.stringToShallow("K False ZERO");
+        ShallowSKI.stringToShallow("K I False True");
+        ShallowSKI.stringToShallow("S K I ZERO");
+        ShallowSKI.stringToShallow("S (K S) K K Succ ZERO False");
+        ShallowSKI.stringToShallow("Cons 8 [5, 10, 7]");
 
         SKI.executeCode("B=S (K S) K;" +
                 "B K Succ ZERO False");
@@ -175,7 +175,7 @@ public class Main {
         SKI.executeCode("[Cons ZERO [],[ZERO,ZERO]]");
 
         SKI.executeCode("[[Succ ZERO],[ZERO, ZERO]]");
-        SKI.executeCode("[[I True],[False, True]]");
+        SKI.executeCode("toggle shallow eval;[[I True],[False, True]];toggle shallow eval");
 
         SKI.executeCode("" +
                 "LE=Rec (K True) (K (S (K (Rec False)) (S (K K))));" +
