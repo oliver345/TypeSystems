@@ -202,7 +202,7 @@ public class TypeChecker {
                 unknownTypes = unify(typeEquations, unknownTypes);
                 pair.getLeft().substituteUnknownTypes(unknownTypes);
 
-                return Optional.of(Pair.of(pair.getLeft(), replaceTypeIfUnknown(pair.getRight(), unknownTypes)));
+                return Optional.of(Pair.of(pair.getLeft(), ((AnnotatedPreterm) parseTree).getType()));
             }
 
             throw new TypeCheckerException("Could not infer the type of preterm: \"" + ((AnnotatedPreterm) parseTree).getPreterm().toString() + "\"");
