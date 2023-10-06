@@ -11,4 +11,5 @@ ITER=C (B B Rec) K;
 LE_ITER=ITER (K True) (CASE False);
 AND=C (B C ITE) False;
 OR=C ITE True;
+isZERO=Rec True (K (K False));
 listSize=RecList ZERO (B (K (K Succ)) I);  <- ha az input [], meg kell adni RecList type paramétereit, A: lista type param, B: zero elem

@@ -55,9 +55,21 @@ public class Parser {
                 int closingPos = findEndOfList(input, pos + 1);
                 String listToBeParsed = input.substring(pos + 1, closingPos);
                 Preterm parsedList = listToBeParsed.isEmpty() ? new EmptyListPre() : parseList(listToBeParsed, definitions);
-                preterms.add(parsedList);
-                firstNotProcessedPos = closingPos + 1;
-                pos = closingPos + 1;
+
+                int annotationLength = typeAnnotationLength(input, closingPos);
+                //It is just a list
+                if (annotationLength < 0) {
+                    preterms.add(parsedList);
+                    firstNotProcessedPos = closingPos + 1;
+                    pos = closingPos + 1;
+                }
+                else {
+                    //It is a list in an AnnotatedPreterm
+                    PreType annotationType = parseType(input.substring(closingPos + 2, closingPos + 2 + annotationLength));
+                    preterms.add(new AnnotatedPreterm(parsedList, annotationType));
+                    firstNotProcessedPos = closingPos + 2 + annotationLength;
+                    pos = closingPos + 2 + annotationLength;
+                }
             }
             else {
                 ++pos;
@@ -71,6 +83,18 @@ public class Parser {
         return preterms.size() == 1 ? preterms.get(0) : preterms.stream()
                 .reduce(App::new)
                 .orElseThrow(() -> new ParserException("No preterm found after parsing"));
+    }
+
+    //Checks if the list is a part of an AnnotatedPreterm
+    //It is if there is a ":<Type> part after the list closing bracket
+    private static int typeAnnotationLength(String input, int posOfListClosing) {
+        if (input.length() > posOfListClosing + 2 && input.charAt(posOfListClosing + 1) == ':') {
+            input = input.substring(posOfListClosing + 2);
+            int posOfSpace = input.indexOf(" ");
+            input = input.substring(0, posOfSpace < 0 ? input.length() : posOfSpace);
+            return input.length();
+        }
+        return -1;
     }
 
     private static int findEndOfList(String text, int pos) throws ParserException {
