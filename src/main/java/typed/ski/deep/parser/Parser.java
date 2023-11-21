@@ -340,10 +340,6 @@ public class Parser {
                 hasBrackets = true;
                 indexOfBracketClose = findClosingBracket(input, indexOfBracketOpen + 1);
             }
-            
-            if (hasBrackets) {
-                System.out.println(input.substring(indexOfBracketOpen + 1, indexOfBracketClose));
-            }
 
             if (!hasBrackets || !(indexOfArrow > indexOfBracketOpen && indexOfArrow < indexOfBracketClose)) {
                 return new Function(parseType(input.substring(0, indexOfArrow)), parseType(input.substring(indexOfArrow + 2)));
