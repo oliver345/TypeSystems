@@ -79,6 +79,7 @@ public class SKI {
         final Map<String, Preterm> finalDefs = definitions == null ? new LinkedHashMap<>() : definitions;
 
         Stream.of(codeLines).forEach(codeLine -> {
+            codeLine = codeLine.strip();
             if (stayInREPL) {
                 if (codeLine.equals("quit")) {
                     stayInREPL = false;
@@ -100,11 +101,11 @@ public class SKI {
                 }
                 else {
                     try {
-                        String[] parts = codeLine.trim().split("=");
+                        String[] parts = codeLine.split("=");
                         switch (parts.length) {
-                            case 2 -> storeDefinition(parts[0], parts[1], finalDefs);
+                            case 2 -> storeDefinition(parts[0].strip(), parts[1].strip(), finalDefs);
                             case 1 -> {
-                                String result = executeCodeLine(parts[0], finalDefs)
+                                String result = executeCodeLine(parts[0].strip(), finalDefs)
                                         .map(term -> term.toString(prettyPrintStyle))
                                         .orElse("<<NO RESULT>>");
                                 System.out.println(parts[0] + " ==> " + result);
