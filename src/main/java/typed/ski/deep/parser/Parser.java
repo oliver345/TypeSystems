@@ -118,17 +118,34 @@ public class Parser {
     private static Preterm parseList(String input, Map<String, Preterm> definitions) throws ParserException {
 
         List<Preterm> listItems = new ArrayList<>();
-        while (!input.isEmpty()) {
-            if (input.startsWith("[")) {
-                int closingPos = findEndOfList(input, 1);
-                listItems.add(parseList(input.substring(1, closingPos), definitions));
-                input = input.substring(closingPos + 1 == input.length() ? closingPos + 1 : closingPos + 2).strip();
+        int pos = 0;
+        int bracketCount = 0;
+        int firstNotProcessedPos = 0;
+
+        while(pos < input.length()) {
+            switch (input.charAt(pos)) {
+                case '[', '(' -> {
+                    ++bracketCount;
+                    ++pos;
+                }
+                case ']', ')' -> {
+                    --bracketCount;
+                    ++pos;
+                }
+                case ',' -> {
+                    if (bracketCount == 0) {
+                        listItems.add(createParseTree(input.substring(firstNotProcessedPos, pos).strip(), definitions));
+                        firstNotProcessedPos = pos + 1;
+                    }
+                    ++pos;
+                }
+                default -> ++pos;
             }
-            else {
-                int listItemSeparator = findListItemSeparator(input);
-                listItems.add(createParseTree(input.substring(0, listItemSeparator), definitions));
-                input = input.substring(listItemSeparator == input.length() ? listItemSeparator : listItemSeparator + 1).strip();
-            }
+        }
+
+        String lastListItem = input.substring(firstNotProcessedPos);
+        if (lastListItem.length() > 0) {
+            listItems.add(createParseTree(lastListItem.strip(), definitions));
         }
 
         listItems.add(new EmptyListPre());
@@ -138,25 +155,6 @@ public class Parser {
         return listItems.stream()
                 .reduce((list, item) -> new App(new App(new ConsPre(), item), list))
                 .orElseThrow(() -> new ParserException("No list item found after parsing list for input \"" + finalInput + "\""));
-    }
-
-    private static int findListItemSeparator(String input) throws ParserException {
-        if (input.contains(",")) {
-            int pos = 0;
-            boolean notFound = true;
-            while (pos < input.length() && notFound) {
-                notFound = input.charAt(pos) != ',' || !areParenthesesValid(input.substring(0, pos), false);
-                ++pos;
-            }
-            if (!notFound) {
-                return pos - 1;
-            } else {
-                throw new ParserException("Incorrect list syntax \"" + input + "\"");
-            }
-        }
-        else {
-            return input.length();
-        }
     }
 
     private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) throws ParserException {
