@@ -7,7 +7,7 @@ import typed.ski.deep.parser.Parser;
 import typed.ski.deep.parser.ParserException;
 import typed.ski.deep.typechecker.TypeChecker;
 import typed.ski.deep.typechecker.TypeCheckerException;
-import typed.ski.shallow.ShallowSKI;
+import typed.ski.shallow.ShallowParser;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -95,6 +95,9 @@ public class SKI {
                 else if (codeLine.equals("toggle shallow eval")) {
                     shallowEnabled = !shallowEnabled;
                     System.out.println("Shallow evaluation: " + (shallowEnabled ? "ON" : "OFF"));
+                    if (shallowEnabled) {
+                        System.out.println("Definitions will be ignored in Shallow mode!");
+                    }
                 }
                 else if (codeLine.startsWith("load ")) {
                     loadFileInput(codeLine.substring("load ".length()), finalDefs);
@@ -143,12 +146,16 @@ public class SKI {
 
     private static Optional<Term> executeCodeLine(String input, Map<String, Preterm> definitions) {
         try {
-            Term wellTypedTree = TypeChecker.createWellTypedTree(Parser.createParseTree(input, definitions));
             if (shallowEnabled) {
                 System.out.println("--- Shallow evaluated ---");
-                System.out.println(ShallowSKI.termToShallow(wellTypedTree));
+                System.out.println(ShallowParser.parseAndEvalWithShallow(input, new HashMap<>()));
                 System.out.println("--- --- --- ---");
             }
+            //Parse
+            Preterm parseTree = Parser.createParseTree(input, definitions);
+            //TypeCheck
+            Term wellTypedTree = TypeChecker.createWellTypedTree(parseTree);
+            //Eval
             return Optional.of(Evaluator.eval(wellTypedTree));
         }
         catch (ParserException parserException) {
