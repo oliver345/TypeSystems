@@ -1,6 +1,16 @@
 package typed.ski.shallow;
 
+import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.term.*;
+import typed.ski.deep.lang.term.False;
+import typed.ski.deep.lang.term.I;
+import typed.ski.deep.lang.term.ITE;
+import typed.ski.deep.lang.term.K;
+import typed.ski.deep.lang.term.Rec;
+import typed.ski.deep.lang.term.S;
+import typed.ski.deep.lang.term.Succ;
+import typed.ski.deep.lang.term.True;
+import typed.ski.deep.lang.term.ZERO;
 import typed.ski.deep.parser.Parser;
 import typed.ski.deep.typechecker.TypeChecker;
 
@@ -10,6 +20,12 @@ import java.util.List;
 import java.util.function.Function;
 
 public abstract class ShallowSKI {
+
+    public static final String INSERTION_SORT_EXP = "RecList [] (S (K K) (S ((S (K S) K) RecList ((S (S (K (S (K S) K)) S) (K K)) Cons [])) ((S (S (K (S (K S) K)) S) (K K)) ((S (K S) K) S ((S (K S) K) ((S (K S) K) (S (S (K (S (K S) K)) S) (K K))) ((S (K S) K) ((S (K S) K) ((S (K S) K) (S (K S) K))) (S ((S (K S) K) S ((S (K S) K) ((S (K S) K) (S (K S) K)) ((S (K S) K) ((S (K S) K) ITE) (Rec (K True) (K (S (K (Rec False))(S (K K)))))))) ((S (S (K (S (K S) K)) S) (K K)) ((S (K S) K) (S (K S) K) ((S (K S) K) (S (K S) K) Cons)) Cons))))) Cons)))";
+
+    public static final String LE_EXP = "Rec (K True) (K (S (K (Rec False))(S (K K))))";
+
+    public static final String C_EXP = "S (S (K (S (K S) K)) S) (K K)";
 
     public static <A, B, C> Function<Function<A, Function<B, C>>, Function<Function<A, B>, Function<A, C>>> s() {
         return f -> (g -> (a -> f.apply(a).apply(g.apply(a))));
@@ -131,10 +147,70 @@ public abstract class ShallowSKI {
         throw new IllegalArgumentException();
     }
 
-    public static void stringToShallow(String input) {
+    //Evaluates Deep implemented PreTerm by Shallow implementation
+    public static Object preTermToShallow(Preterm preterm) {
+        if (preterm instanceof App app) {
+            return ((Function) preTermToShallow(app.getLeftTerm())).apply(preTermToShallow(app.getRightTerm()));
+        }
+        if (preterm instanceof AnnotatedPreterm) {
+            return preTermToShallow(((AnnotatedPreterm) preterm).getPreterm());
+        }
+        if (preterm instanceof ConsPre) {
+            return cons();
+        }
+        if (preterm instanceof EmptyListPre) {
+            return new ArrayList<>();
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.False) {
+            return false;
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.I || preterm instanceof I_A) {
+            return i();
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.ITE) {
+            return ITE();
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.K || preterm instanceof K_AB) {
+            return k();
+        }
+        if (preterm instanceof Lit) {
+            return ((Lit) preterm).getText();
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.Rec || preterm instanceof Rec_A) {
+            return rec();
+        }
+        if (preterm instanceof RecListPre || preterm instanceof RecListPre_AB) {
+            return recList();
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.S || preterm instanceof S_ABC) {
+            return s();
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.Succ) {
+            return succ();
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.True) {
+            return true;
+        }
+        if (preterm instanceof typed.ski.deep.lang.preterm.ZERO) {
+            return 0;
+        }
+        throw new IllegalArgumentException();
+    }
+
+    public static void stringToShallowWithDeepTypeCheck(String input) {
         try {
             Term term = TypeChecker.createWellTypedTree(Parser.createParseTree(input, new HashMap<>()));
             System.out.println(ShallowSKI.termToShallow(term));
+        }
+        catch (Exception exception) {
+            System.out.println("Something went wrong for input: " + input);
+            exception.printStackTrace();
+        }
+    }
+
+    public static void stringToShallow(String input) {
+        try {
+            System.out.println(ShallowParser.parseAndEvalWithShallow(input, new HashMap<>()));
         }
         catch (Exception exception) {
             System.out.println("Something went wrong for input: " + input);
