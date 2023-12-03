@@ -2,7 +2,6 @@ package typed.ski.deep.typechecker;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.preterm.False;
 import typed.ski.deep.lang.preterm.I;
 import typed.ski.deep.lang.preterm.ITE;
@@ -12,6 +11,7 @@ import typed.ski.deep.lang.preterm.S;
 import typed.ski.deep.lang.preterm.Succ;
 import typed.ski.deep.lang.preterm.True;
 import typed.ski.deep.lang.preterm.ZERO;
+import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.term.*;
 import typed.ski.deep.lang.type.*;
 
@@ -421,12 +421,8 @@ public class TypeChecker {
                     leftType = (Function) substituteUnknownInPretypeWithType(leftType, new Unknown(), rightWtt.getRight());
                 }
 
-                if (leftType.getInputType() instanceof Unknown) {
-                    /*
-                    TODO: Simplify:
-                    substituteUnknownInPretypeWithType(leftType.getInputType(), (Unknown) leftType.getInputType(), rightWtt.getRight() ===> rightWtt.getRight()
-                     */
-                    leftType = new Function(substituteUnknownInPretypeWithType(leftType.getInputType(), (Unknown) leftType.getInputType(), rightWtt.getRight()), leftType.getResultType());
+                if (doesPretypeContainUnknown(leftType.getInputType(), new Unknown())) {
+                    leftType = new Function(rightWtt.getRight(), leftType.getResultType());
                 }
 
                 if (leftType.getInputType() instanceof typed.ski.deep.lang.type.List &&
@@ -442,8 +438,7 @@ public class TypeChecker {
                 throw new TypeCheckerException("Type mismatch in application: " + parseTree + "\nType of the function: "
                         + leftType + "\nType of the argument: " + rightWtt.getRight());
             }
-
-            return Optional.empty();
+            return Optional.of(Pair.of(new Application(new Function(rightWtt.getRight(), new Unknown()), rightWtt.getRight(), leftWtt.getLeft(), rightWtt.getLeft()), new Unknown()));
         }
 
         if (parseTree instanceof Succ) {
