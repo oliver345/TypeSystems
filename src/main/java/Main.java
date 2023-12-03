@@ -5,6 +5,21 @@ public class Main {
 
     public static void main(String[] args) {
 
+//        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree( "Rec True (K (K False)) ZERO", null))
+//                .map(Pair::getLeft).orElse(null)).toString(true));
+//
+//        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree( "S K I True", null))
+//                .map(Pair::getLeft).orElse(null)).toString(true));
+//
+//        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree( "S K I Succ ZERO", null))
+//                .map(Pair::getLeft).orElse(null)).toString(true));
+//
+//        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree( "((RecList []) ((S (K K)) ((S ((((S (K S)) K) RecList) ((((S ((S (K ((S (K S)) K))) S)) (K K)) Cons) []))) ((((S ((S (K ((S (K S)) K))) S)) (K K)) ((((S (K S)) K) S) ((((S (K S)) K) (((S (K S)) K) ((S ((S (K ((S (K S)) K))) S)) (K K)))) ((((S (K S)) K) (((S (K S)) K) (((S (K S)) K) ((S (K S)) K)))) ((S ((((S (K S)) K) S) ((((S (K S)) K) (((S (K S)) K) ((S (K S)) K))) ((((S (K S)) K) (((S (K S)) K) ITE)) ((Rec (K True)) (K ((S (K (Rec False))) (S (K K))))))))) ((((S ((S (K ((S (K S)) K))) S)) (K K)) ((((S (K S)) K) ((S (K S)) K)) ((((S (K S)) K) ((S (K S)) K)) Cons))) Cons)))))) Cons)))) [5, 3,4,8,1,0,9]", null))
+//                .map(Pair::getLeft).orElse(null)).toString(true));
+//
+//        System.out.println(Evaluator.eval(TypeChecker.infer(Parser.createParseTree( "RecList ZERO ((S (K S) K) (K (K Succ)) I) []", null))
+//                .map(Pair::getLeft).orElse(null)).toString(true));
+
         ShallowSKI.stringToShallow("K False ZERO");
         ShallowSKI.stringToShallow("K I False True");
         ShallowSKI.stringToShallow("S K I ZERO");

@@ -294,7 +294,7 @@ public class TypeChecker {
         return Optional.empty();
     }
 
-    private static Optional<Pair<Term, PreType>> infer(Preterm parseTree) throws TypeCheckerException {
+    public static Optional<Pair<Term, PreType>> infer(Preterm parseTree) throws TypeCheckerException {
 
         if (parseTree instanceof S) {
             PreType a = new Unknown();
@@ -431,8 +431,11 @@ public class TypeChecker {
                     leftType = new Function(new typed.ski.deep.lang.type.List(((typed.ski.deep.lang.type.List) rightWtt.getRight()).getA()), leftType.getResultType());
                 }
 
-                if (areTypesEqual(leftType.getInputType(), rightWtt.getRight())) {
-                    return Optional.of(Pair.of(new Application(leftType, rightWtt.getRight(), leftWtt.getLeft(), rightWtt.getLeft()), leftType.getResultType()));
+                PreType leftInputType = leftType.getInputType();
+                PreType rightType = rightWtt.getRight();
+                PreType mergedType = mergeTypesIfUnknown(leftInputType, rightType);
+                if (mergedType != null) {
+                    return Optional.of(Pair.of(new Application(new Function(mergedType, leftType.getResultType()), mergedType, leftWtt.getLeft(), rightWtt.getLeft()), leftType.getResultType()));
                 }
 
                 throw new TypeCheckerException("Type mismatch in application: " + parseTree + "\nType of the function: "
@@ -722,6 +725,30 @@ public class TypeChecker {
         }
         else {
             return type.getClass().equals(otherType.getClass());
+        }
+    }
+
+    private static PreType mergeTypesIfUnknown(PreType type, PreType otherType) {
+        if (type == null || otherType == null) {
+            return null;
+        }
+        if (type instanceof Unknown) {
+            return otherType;
+        }
+        if (otherType instanceof Unknown) {
+            return type;
+        }
+        if (type instanceof Function && otherType instanceof Function) {
+            return new Function(mergeTypesIfUnknown(((Function) type).getInputType(), ((Function) otherType).getInputType()), mergeTypesIfUnknown(((Function) type).getResultType(), ((Function) otherType).getResultType()));
+        }
+        else if (type instanceof typed.ski.deep.lang.type.List && otherType instanceof typed.ski.deep.lang.type.List) {
+            return new typed.ski.deep.lang.type.List(mergeTypesIfUnknown(((typed.ski.deep.lang.type.List) type).getA(), ((typed.ski.deep.lang.type.List) otherType).getA()));
+        }
+        else if (type.getClass().equals(otherType.getClass())) {
+            return type;
+        }
+        else {
+            return null;
         }
     }
 
