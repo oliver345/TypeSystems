@@ -1,6 +1,6 @@
 B=S (K S) K;
 C=S (S (K B) S) (K K);
-LE=Rec (K True) (K (S (K (Rec False))(S (K K))));
+LE=Rec (K True) (K (S (K (Rec False)) (S (K K))));
 INSERT=S (B RecList (C Cons [])) (C (B S (B (B C) (B (B (B B)) (S (B S (B (B B) (B (B ITE) LE))) (C (B B (B B Cons)) Cons))))) Cons);
 INSERT 4 [2,2,2];
 INSERTION_SORT=RecList [] (S (K K) INSERT);
