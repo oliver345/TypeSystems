@@ -71,12 +71,13 @@ public class SKI {
     }
 
     public static void executeCode(String input) {
-        executeCode(input, null);
+        executeCode(input, null, null);
     }
 
-    public static void executeCode(String input, Map<String, Preterm> definitions) {
+    public static void executeCode(String input, Map<String, Preterm> definitions, Map<String, String> shallowDefinitions) {
         String[] codeLines = input.split(";");
         final Map<String, Preterm> finalDefs = definitions == null ? new LinkedHashMap<>() : definitions;
+        final Map<String, String> finalShallowDefs = shallowDefinitions == null ? new LinkedHashMap<>() : shallowDefinitions;
 
         Stream.of(codeLines).forEach(codeLine -> {
             codeLine = codeLine.strip();
@@ -95,20 +96,17 @@ public class SKI {
                 else if (codeLine.equals("toggle shallow eval")) {
                     shallowEnabled = !shallowEnabled;
                     System.out.println("Shallow evaluation: " + (shallowEnabled ? "ON" : "OFF"));
-                    if (shallowEnabled) {
-                        System.out.println("Definitions will be ignored in Shallow mode!");
-                    }
                 }
                 else if (codeLine.startsWith("load ")) {
-                    loadFileInput(codeLine.substring("load ".length()), finalDefs);
+                    loadFileInput(codeLine.substring("load ".length()), finalDefs, finalShallowDefs);
                 }
                 else {
                     try {
                         String[] parts = codeLine.split("=");
                         switch (parts.length) {
-                            case 2 -> storeDefinition(parts[0].strip(), parts[1].strip(), finalDefs);
+                            case 2 -> storeDefinition(parts[0].strip(), parts[1].strip(), finalDefs, finalShallowDefs);
                             case 1 -> {
-                                String result = executeCodeLine(parts[0].strip(), finalDefs)
+                                String result = executeCodeLine(parts[0].strip(), finalDefs, finalShallowDefs)
                                         .map(term -> term.toString(prettyPrintStyle))
                                         .orElse("<<NO RESULT>>");
                                 System.out.println(parts[0] + " ==> " + result);
@@ -125,15 +123,15 @@ public class SKI {
     }
 
     private static void loadFileInput(String filePath) {
-        loadFileInput(filePath, null);
+        loadFileInput(filePath, null, null);
     }
 
-    private static void loadFileInput(String filePath, Map<String, Preterm> definitions) {
+    private static void loadFileInput(String filePath, Map<String, Preterm> definitions, Map<String, String> shallowDefinitions) {
         Path path = Paths.get(filePath);
         if (path.toFile().exists()) {
             try (Stream<String> fileStream = Files.lines(path)) {
                 String code = fileStream.collect(Collectors.joining());
-                executeCode(code, definitions);
+                executeCode(code, definitions, shallowDefinitions);
             }
             catch (IOException ioException) {
                 throw new RuntimeException(ioException);
@@ -144,11 +142,12 @@ public class SKI {
         }
     }
 
-    private static Optional<Term> executeCodeLine(String input, Map<String, Preterm> definitions) {
+    private static Optional<Term> executeCodeLine(String input, Map<String, Preterm> definitions, Map<String, String> shallowDefinitions) {
         try {
             if (shallowEnabled) {
                 System.out.println("--- Shallow evaluated ---");
-                System.out.println(ShallowParser.parseAndEvalWithShallow(input, new HashMap<>()));
+                System.out.println(ShallowParser.parseAndEvalWithShallow(input, shallowDefinitions));
+                //TODO: handle general exception for shallow
                 System.out.println("--- --- --- ---");
             }
             //Parse
@@ -164,7 +163,11 @@ public class SKI {
         catch (TypeCheckerException typeCheckerException) {
             handleException(typeCheckerException, "Type check failed on \"" + input + "\"");
         }
-        //Catch general exceptions!
+        //TODO: Catch general exceptions! Deep-shallow
+        //Handle shallow exception properly
+        catch (Exception tmpException) {
+            handleException(tmpException, "General exception in \"" + input + "\"");
+        }
 
         return Optional.empty();
     }
@@ -172,6 +175,7 @@ public class SKI {
     public static void runInREPL() {
         System.out.println("Welcome to Typed SKI!");
         Map<String, Preterm> definitions = new LinkedHashMap<>();
+        Map<String, String> shallowDefinitions = new LinkedHashMap<>();
 
         stayInREPL = true;
         Scanner scanner = new Scanner(System.in);
@@ -180,15 +184,16 @@ public class SKI {
             String input = scanner.nextLine();
 
             if (!input.isEmpty()) {
-                executeCode(input, definitions);
+                executeCode(input, definitions, shallowDefinitions);
             }
         }
     }
 
-    private static void storeDefinition(String key, String statement, Map<String, Preterm> definitions) throws ParserException {
+    private static void storeDefinition(String key, String statement, Map<String, Preterm> definitions, Map<String, String> shallowDefinitions) throws ParserException {
         if (!reservedTokens.contains(key) && key.matches("[^(:)\\]\\[<>{}=\\s-]+")) {
             try {
                 definitions.put(key, Parser.createParseTree(statement, definitions));
+                shallowDefinitions.put(key, statement);
                 System.out.println("Definition stored:\n" + key + " = " + statement);
             }
             catch (Exception exception) {

@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 public class ShallowParser {
     
     //TODO: definitions map should be removed from the parameters, since it is now supported here
-    public static Object parseAndEvalWithShallow(String input, Map<String, Object> definitions) throws ParserException {
+    public static Object parseAndEvalWithShallow(String input, Map<String, String> definitions) throws ParserException {
         List<Object> terms = new ArrayList<>();
 
         int pos = 0;
@@ -103,7 +103,7 @@ public class ShallowParser {
     }
 
     //String without brackets -> tokens -> Preterm -> append one by one
-    private static void appendToListAsPreterms(String input, List<Object> terms, Map<String, Object> definitions) throws ParserException {
+    private static void appendToListAsPreterms(String input, List<Object> terms, Map<String, String> definitions) throws ParserException {
         List<String> tokens = getTokens(input);
         try {
             tokens.forEach(token -> {
@@ -125,7 +125,7 @@ public class ShallowParser {
                 .collect(Collectors.toList());
     }
 
-    private static Object tokenToTerms(String token, Map<String, Object> definitions) throws ParserException {
+    private static Object tokenToTerms(String token, Map<String, String> definitions) throws ParserException {
         if (token.contains(":")) {
             int indexOfColon = token.indexOf(":");
             return tokenToTerms(token.substring(0, indexOfColon), definitions);
@@ -177,7 +177,7 @@ public class ShallowParser {
             }
         }
         else if (definitions != null && definitions.containsKey(token)) {
-            return definitions.get(token);
+            return parseAndEvalWithShallow(definitions.get(token), definitions);
         }
         else {
             return token;
@@ -218,7 +218,7 @@ public class ShallowParser {
         throw new ParserException("Incorrect list syntax \"" + text + "\"");
     }
 
-    private static Object parseList(String input, Map<String, Object> definitions) throws ParserException {
+    private static Object parseList(String input, Map<String, String> definitions) throws ParserException {
 
         List<Object> listItems = new ArrayList<>();
         int pos = 0;
