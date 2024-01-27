@@ -2,18 +2,18 @@ package typed.ski.deep.lang.preterm;
 
 public class Lit implements Preterm {
 
-    private final String name;
+    private final String text;
 
-    public Lit(String name) {
-        this.name = name;
+    public Lit(String text) {
+        this.text = text;
     }
 
-    public String getName() {
-        return name;
+    public String getText() {
+        return text;
     }
 
     @Override
     public String toString() {
-        return name;
+        return text;
     }
 }

@@ -1,35 +1,46 @@
 package typed.ski.deep.lang.term;
 
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
+
+import java.util.Map;
+
+import static typed.ski.deep.typechecker.TypeChecker.replaceTypeIfUnknown;
 
 public class S implements Term {
 
-    private final Ty x;
+    private PreType x;
 
-    private final Ty y;
+    private PreType y;
 
-    private final Ty z;
+    private PreType z;
 
-    public S(Ty x, Ty y, Ty z) {
+    public S(PreType x, PreType y, PreType z) {
         this.x = x;
         this.y = y;
         this.z = z;
     }
 
-    public Ty getX() {
+    public PreType getX() {
         return x;
     }
 
-    public Ty getY() {
+    public PreType getY() {
         return y;
     }
 
-    public Ty getZ() {
+    public PreType getZ() {
         return z;
     }
 
     @Override
     public String toString() {
-        return "S[" + x + ", " + y + ", " + z + "]";
+        return "S{" + x + "}{" + y + "}{" + z + "}";
+    }
+
+    @Override
+    public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
+        x = replaceTypeIfUnknown(x, resolvedTypes);
+        y = replaceTypeIfUnknown(y, resolvedTypes);
+        z = replaceTypeIfUnknown(z, resolvedTypes);
     }
 }

@@ -1,19 +1,18 @@
-package typed.ski.deep.parser;
+package typed.ski.shallow;
 
-import typed.ski.deep.lang.preterm.*;
 import typed.ski.deep.lang.type.*;
+import typed.ski.deep.parser.ParserException;
 
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Parser {
-
-    private static final String TEXT_IN_BRACKETS_PATTERN = "\\([^)]*\\)";
-
-    public static Preterm createParseTree(String input, Map<String, Preterm> definitions) throws ParserException {
-        List<Preterm> preterms = new ArrayList<>();
+public class ShallowParser {
+    
+    //TODO: definitions map should be removed from the parameters, since it is now supported here
+    public static Object parseAndEvalWithShallow(String input, Map<String, String> definitions) throws ParserException {
+        List<Object> terms = new ArrayList<>();
 
         int pos = 0;
         int firstNotProcessedPos = 0;
@@ -21,28 +20,25 @@ public class Parser {
         while (pos < input.length()) {
             if (input.charAt(pos) == '(') {
                 if (isInAnnotatedTerm(input, pos)) {
-                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms, definitions);
+                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), terms, definitions);
                     int closingPos = findClosingBracket(input, pos + 1);
-                    Preterm term = createParseTree(input.substring(pos + 1, closingPos), definitions);
+                    Object term = parseAndEvalWithShallow(input.substring(pos + 1, closingPos), definitions);
 
                     int spaceDistance = input.substring(closingPos + 2).indexOf(" ");
-                    String type;
                     if (spaceDistance > -1) {
-                        type = input.substring(closingPos + 2, closingPos + 2 + spaceDistance);
                         firstNotProcessedPos = closingPos + spaceDistance + 3;
                         pos = closingPos + spaceDistance + 3;
                     }
                     else {
-                        type = input.substring(closingPos + 2);
                         firstNotProcessedPos = input.length();
                         pos = input.length();
                     }
-                    preterms.add(new AnnotatedPreterm(term, parseType(type)));
+                    terms.add(term);
                 }
                 else if(!isItInAFunction(input, pos)) {
                     int closingPos = findClosingBracket(input, pos + 1);
-                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms, definitions);
-                    preterms.add(createParseTree(input.substring(pos + 1, closingPos), definitions));
+                    appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), terms, definitions);
+                    terms.add(parseAndEvalWithShallow(input.substring(pos + 1, closingPos), definitions));
                     firstNotProcessedPos = closingPos + 1;
                     pos = closingPos + 1;
                 }
@@ -51,22 +47,20 @@ public class Parser {
                 }
             }
             else if (input.charAt(pos) == '[') {
-                appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), preterms, definitions);
+                appendToListAsPreterms(input.substring(firstNotProcessedPos, pos), terms, definitions);
                 int closingPos = findEndOfList(input, pos + 1);
                 String listToBeParsed = input.substring(pos + 1, closingPos);
-                Preterm parsedList = listToBeParsed.isEmpty() ? new EmptyListPre() : parseList(listToBeParsed, definitions);
-
+                Object parsedList = listToBeParsed.isEmpty() ? new ArrayList<>() : parseList(listToBeParsed, definitions);
+                terms.add(parsedList);
                 int annotationLength = typeAnnotationLength(input, closingPos);
                 //It is just a list
                 if (annotationLength < 0) {
-                    preterms.add(parsedList);
                     firstNotProcessedPos = closingPos + 1;
                     pos = closingPos + 1;
                 }
                 else {
                     //It is a list in an AnnotatedPreterm
                     PreType annotationType = parseType(input.substring(closingPos + 2, closingPos + 2 + annotationLength));
-                    preterms.add(new AnnotatedPreterm(parsedList, annotationType));
                     firstNotProcessedPos = closingPos + 2 + annotationLength;
                     pos = closingPos + 2 + annotationLength;
                 }
@@ -77,97 +71,17 @@ public class Parser {
         }
 
         if (firstNotProcessedPos < input.length()) {
-            appendToListAsPreterms(input.substring(firstNotProcessedPos), preterms, definitions);
+            appendToListAsPreterms(input.substring(firstNotProcessedPos), terms, definitions);
         }
 
-        return preterms.size() == 1 ? preterms.get(0) : preterms.stream()
-                .reduce(App::new)
+        return terms.size() == 1 ? terms.get(0) : terms.stream()
+                .reduce((leftTerm, rightTerm) -> ((java.util.function.Function) leftTerm).apply(rightTerm))
                 .orElseThrow(() -> new ParserException("No preterm found after parsing"));
-    }
-
-    //Checks if the list is a part of an AnnotatedPreterm
-    //It is if there is a ":<Type> part after the list closing bracket
-    private static int typeAnnotationLength(String input, int posOfListClosing) {
-        if (input.length() > posOfListClosing + 2 && input.charAt(posOfListClosing + 1) == ':') {
-            input = input.substring(posOfListClosing + 2);
-            int posOfSpace = input.indexOf(" ");
-            input = input.substring(0, posOfSpace < 0 ? input.length() : posOfSpace);
-            return input.length();
-        }
-        return -1;
-    }
-
-    private static int findEndOfList(String text, int pos) throws ParserException {
-        int diff = 1;
-        while (pos < text.length()) {
-            if (text.charAt(pos) == ']') {
-                --diff;
-            }
-            else if (text.charAt(pos) == '[') {
-                ++diff;
-            }
-
-            if (diff == 0) {
-                return pos;
-            }
-            ++pos;
-        }
-        throw new ParserException("Incorrect list syntax \"" + text + "\"");
-    }
-
-    private static Preterm parseList(String input, Map<String, Preterm> definitions) throws ParserException {
-
-        List<Preterm> listItems = new ArrayList<>();
-        int pos = 0;
-        int bracketCount = 0;
-        int firstNotProcessedPos = 0;
-
-        while(pos < input.length()) {
-            switch (input.charAt(pos)) {
-                case '[', '(' -> {
-                    ++bracketCount;
-                    ++pos;
-                }
-                case ']', ')' -> {
-                    --bracketCount;
-                    ++pos;
-                }
-                case ',' -> {
-                    if (bracketCount == 0) {
-                        listItems.add(createParseTree(input.substring(firstNotProcessedPos, pos).strip(), definitions));
-                        firstNotProcessedPos = pos + 1;
-                    }
-                    ++pos;
-                }
-                default -> ++pos;
-            }
-        }
-
-        String lastListItem = input.substring(firstNotProcessedPos);
-        if (lastListItem.length() > 0) {
-            listItems.add(createParseTree(lastListItem.strip(), definitions));
-        }
-
-        listItems.add(new EmptyListPre());
-        Collections.reverse(listItems);
-
-        final String finalInput = input;
-        return listItems.stream()
-                .reduce((list, item) -> new App(new App(new ConsPre(), item), list))
-                .orElseThrow(() -> new ParserException("No list item found after parsing list for input \"" + finalInput + "\""));
     }
 
     private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) throws ParserException {
         int closingPos = findClosingBracket(input, posOfOpeningBracket + 1);
         return closingPos < input.length() - 1 && input.charAt(closingPos + 1) == ':';
-    }
-
-    private static boolean isItInAFunction(String input, int posOfBracket) {
-        String afterBracket = input.substring(posOfBracket + 1);
-        return Stream.of(Ty.TypeImplementationEnum.values())
-                .map(Ty.TypeImplementationEnum::getTypeName)
-                .anyMatch(afterBracket::startsWith) ||
-                ((input.substring(0, posOfBracket).contains("->") || input.substring(0, posOfBracket).contains(":")) && !input.substring(0, posOfBracket).contains(" "));
     }
 
     private static int findClosingBracket(String text, int pos) throws ParserException {
@@ -189,12 +103,12 @@ public class Parser {
     }
 
     //String without brackets -> tokens -> Preterm -> append one by one
-    private static void appendToListAsPreterms(String input, List<Preterm> preterms, Map<String, Preterm> definitions) throws ParserException {
+    private static void appendToListAsPreterms(String input, List<Object> terms, Map<String, String> definitions) throws ParserException {
         List<String> tokens = getTokens(input);
         try {
             tokens.forEach(token -> {
                 try {
-                    preterms.add(tokenToPreterm(token, definitions));
+                    terms.add(tokenToTerms(token, definitions));
                 } catch (ParserException parserException) {
                     throw new RuntimeException(parserException);
                 }
@@ -211,93 +125,62 @@ public class Parser {
                 .collect(Collectors.toList());
     }
 
-    private static Preterm tokenToPreterm(String token, Map<String, Preterm> definitions) throws ParserException {
+    private static Object tokenToTerms(String token, Map<String, String> definitions) throws ParserException {
         if (token.contains(":")) {
             int indexOfColon = token.indexOf(":");
-            return new AnnotatedPreterm(tokenToPreterm(token.substring(0, indexOfColon), definitions), parseType(token.substring(indexOfColon + 1)));
+            return tokenToTerms(token.substring(0, indexOfColon), definitions);
         }
         else if (token.equals("S") || (token.startsWith("S{") && token.endsWith("}"))) {
-            if (token.equals("S")) {
-                return new S();
-            }
-            else {
-                String[] parts = token.split("}\\{");
-                return new S_ABC(
-                        parsePreType(parts[0].substring(2)),
-                        parsePreType(parts[1]),
-                        parsePreType(parts[2].substring(0, parts[2].length() - 1)));
-            }
+            return ShallowSKI.s();
         }
         else if (token.equals("K") || (token.startsWith("K{") && token.endsWith("}"))) {
-            if (token.equals("K")) {
-                return new K();
-            }
-            else {
-                String[] parts = token.split("}\\{");
-                return new K_AB(parsePreType(parts[0].substring(2)), parsePreType(parts[1].substring(0, parts[1].length() - 1)));
-            }
+            return ShallowSKI.k();
         }
         else if (token.equals("RecList") || (token.startsWith("RecList{") && token.endsWith("}"))) {
-            if (token.equals("RecList")) {
-                return new RecListPre();
-            }
-            else {
-                String[] parts = token.split("}\\{");
-                return new RecListPre_AB(parsePreType(parts[0].substring(8)), parsePreType(parts[1].substring(0, parts[1].length() - 1)));
-            }
+            return ShallowSKI.recList();
         }
         else if (token.equals("Rec") || (token.startsWith("Rec{") && token.endsWith("}"))) {
-            if (token.equals("Rec")) {
-                return new Rec();
-            }
-            else {
-                return new Rec_A(parsePreType(token.substring(token.indexOf("{") + 1, token.indexOf("}"))));
-            }
+            return ShallowSKI.rec();
         }
         else if (token.equals("I") || (token.startsWith("I{") && token.endsWith("}"))) {
-            if (token.equals("I")) {
-                return new I();
-            }
-            else {
-                return new I_A(parsePreType(token.substring(2, token.length() - 1)));
-            }
+            return ShallowSKI.i();
         }
         else if (token.equals("True")) {
-            return new True();
+            return true;
         }
         else if (token.equals("False")) {
-            return new False();
+            return false;
         }
         else if (token.equals("ITE")) {
-            return new ITE();
+            return ShallowSKI.ITE();
         }
         else if (token.equals("Succ")) {
-            return new Succ();
+            return ShallowSKI.succ();
         }
         else if (token.equals("ZERO")) {
-            return new ZERO();
+            return 0;
         }
         else if (token.equals("Cons")) {
-            return new ConsPre();
+            return ShallowSKI.cons();
         }
         else if (isTokenInteger(token)) {
             int intValue = Integer.parseInt(token);
             if (intValue == 0) {
-                return new ZERO();
+                return 0;
             }
             else {
-                Preterm result = new ZERO();
+                Object result = 0;
                 for (int i = 0; i < intValue; i++) {
-                    result = new App(new Succ(), result);
+                    result = ShallowSKI.succ().apply((Integer) result);
                 }
                 return result;
             }
         }
         else if (definitions != null && definitions.containsKey(token)) {
-            return definitions.get(token);
+            return parseAndEvalWithShallow(definitions.get(token), definitions);
         }
         else {
-            return new Lit(token);
+            return token;
         }
     }
 
@@ -309,8 +192,84 @@ public class Parser {
         }
     }
 
-    private static PreType parsePreType(String input) throws ParserException {
-        return input.isEmpty() ? new Unknown() : parseType(input);
+    private static boolean isItInAFunction(String input, int posOfBracket) {
+        String afterBracket = input.substring(posOfBracket + 1);
+        return Stream.of(Ty.TypeImplementationEnum.values())
+                .map(Ty.TypeImplementationEnum::getTypeName)
+                .anyMatch(afterBracket::startsWith) ||
+                ((input.substring(0, posOfBracket).contains("->") || input.substring(0, posOfBracket).contains(":")) && !input.substring(0, posOfBracket).contains(" "));
+    }
+
+    private static int findEndOfList(String text, int pos) throws ParserException {
+        int diff = 1;
+        while (pos < text.length()) {
+            if (text.charAt(pos) == ']') {
+                --diff;
+            }
+            else if (text.charAt(pos) == '[') {
+                ++diff;
+            }
+
+            if (diff == 0) {
+                return pos;
+            }
+            ++pos;
+        }
+        throw new ParserException("Incorrect list syntax \"" + text + "\"");
+    }
+
+    private static Object parseList(String input, Map<String, String> definitions) throws ParserException {
+
+        List<Object> listItems = new ArrayList<>();
+        int pos = 0;
+        int bracketCount = 0;
+        int firstNotProcessedPos = 0;
+
+        while(pos < input.length()) {
+            switch (input.charAt(pos)) {
+                case '[', '(' -> {
+                    ++bracketCount;
+                    ++pos;
+                }
+                case ']', ')' -> {
+                    --bracketCount;
+                    ++pos;
+                }
+                case ',' -> {
+                    if (bracketCount == 0) {
+                        listItems.add(parseAndEvalWithShallow(input.substring(firstNotProcessedPos, pos).strip(), definitions));
+                        firstNotProcessedPos = pos + 1;
+                    }
+                    ++pos;
+                }
+                default -> ++pos;
+            }
+        }
+
+        String lastListItem = input.substring(firstNotProcessedPos);
+        if (lastListItem.length() > 0) {
+            listItems.add(parseAndEvalWithShallow(lastListItem.strip(), definitions));
+        }
+
+        listItems.add(new ArrayList<>());
+        Collections.reverse(listItems);
+
+        final String finalInput = input;
+        return listItems.stream()
+                .reduce((list, item) -> (ShallowSKI.cons().apply(item)).apply((List<Object>) list))
+                .orElseThrow(() -> new ParserException("No list item found after parsing list for input \"" + finalInput + "\""));
+    }
+
+    //Checks if the list is a part of an AnnotatedPreterm
+    //It is if there is a ":<Type> part after the list closing bracket
+    private static int typeAnnotationLength(String input, int posOfListClosing) {
+        if (input.length() > posOfListClosing + 2 && input.charAt(posOfListClosing + 1) == ':') {
+            input = input.substring(posOfListClosing + 2);
+            int posOfSpace = input.indexOf(" ");
+            input = input.substring(0, posOfSpace < 0 ? input.length() : posOfSpace);
+            return input.length();
+        }
+        return -1;
     }
 
     private static PreType parseType(String input) throws ParserException {
@@ -387,5 +346,9 @@ public class Parser {
         }
 
         return validParentheses;
+    }
+
+    private static PreType parsePreType(String input) throws ParserException {
+        return input.isEmpty() ? new Unknown() : parseType(input);
     }
 }

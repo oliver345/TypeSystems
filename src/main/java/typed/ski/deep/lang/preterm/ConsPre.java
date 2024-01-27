@@ -1,9 +1,9 @@
 package typed.ski.deep.lang.preterm;
 
-public class Rec implements Preterm {
+public class ConsPre implements Preterm {
 
     @Override
     public String toString() {
-        return "Rec";
+        return "Cons";
     }
 }

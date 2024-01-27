@@ -4,11 +4,11 @@ import typed.ski.deep.lang.type.PreType;
 
 import java.util.Map;
 
-public class True implements Term {
+public class EmptyList implements Term {
 
     @Override
     public String toString() {
-        return "True";
+        return "[]";
     }
 
     @Override

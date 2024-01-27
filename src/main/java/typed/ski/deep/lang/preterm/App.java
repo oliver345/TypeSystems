@@ -21,6 +21,6 @@ public class App implements Preterm {
 
     @Override
     public String toString() {
-        return leftTerm + " " + rightTerm;
+        return "(" + leftTerm + " " + rightTerm + ")";
     }
 }

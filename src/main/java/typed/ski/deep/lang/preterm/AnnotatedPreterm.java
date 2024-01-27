@@ -1,14 +1,14 @@
 package typed.ski.deep.lang.preterm;
 
-import typed.ski.deep.lang.type.Ty;
+import typed.ski.deep.lang.type.PreType;
 
 public class AnnotatedPreterm implements Preterm {
 
     private final Preterm preterm;
 
-    private final Ty type;
+    private final PreType type;
 
-    public AnnotatedPreterm(Preterm preterm, Ty type) {
+    public AnnotatedPreterm(Preterm preterm, PreType type) {
         this.preterm = preterm;
         this.type = type;
     }
@@ -17,7 +17,7 @@ public class AnnotatedPreterm implements Preterm {
         return preterm;
     }
 
-    public Ty getType() {
+    public PreType getType() {
         return type;
     }
 

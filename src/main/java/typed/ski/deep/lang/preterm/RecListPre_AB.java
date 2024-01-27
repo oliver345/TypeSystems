@@ -2,13 +2,13 @@ package typed.ski.deep.lang.preterm;
 
 import typed.ski.deep.lang.type.PreType;
 
-public class K_AB implements Preterm {
+public class RecListPre_AB implements Preterm {
 
     private final PreType a;
 
     private final PreType b;
 
-    public K_AB(PreType a, PreType b) {
+    public RecListPre_AB(PreType a, PreType b) {
         this.a = a;
         this.b = b;
     }
@@ -23,6 +23,6 @@ public class K_AB implements Preterm {
 
     @Override
     public String toString() {
-        return "K{" + a + "}{" + b + "}";
+        return "RecList{" + a + "}{" + b + "}";
     }
 }

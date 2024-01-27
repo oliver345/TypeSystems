@@ -6,25 +6,21 @@ import java.util.Map;
 
 import static typed.ski.deep.typechecker.TypeChecker.replaceTypeIfUnknown;
 
-public class Rec implements Term {
+public class Cons implements Term{
 
-    private PreType x;
+    private PreType listType;
 
-    public Rec(PreType x) {
-        this.x = x;
-    }
-
-    public PreType getX() {
-        return x;
+    public Cons(PreType listType) {
+        this.listType = listType;
     }
 
     @Override
     public String toString() {
-        return "Rec{" + x + "}";
+        return "Cons";
     }
 
     @Override
     public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
-        x = replaceTypeIfUnknown(x, resolvedTypes);
+        listType = replaceTypeIfUnknown(listType, resolvedTypes);
     }
 }
