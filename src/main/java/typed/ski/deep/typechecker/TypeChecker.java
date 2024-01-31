@@ -1,6 +1,5 @@
 package typed.ski.deep.typechecker;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import typed.ski.deep.lang.preterm.False;
 import typed.ski.deep.lang.preterm.I;
@@ -45,16 +44,16 @@ public class TypeChecker {
         return resultOptional.get().getLeft();
     }
 
-    public static PreType replaceTypeIfUnknown(PreType preType, Map<Integer, PreType> resolvedTypes) {
+    public static PreType replaceTypeIfUnknown(PreType preType) {
         if (preType instanceof Unknown) {
-            return resolvedTypes.get(((Unknown) preType).getTypeId());
+            return unknownTypes.get(((Unknown) preType).getTypeId());
         }
         else if (preType instanceof Function) {
-            return new Function(replaceTypeIfUnknown(((Function) preType).getInputType(), resolvedTypes),
-                    replaceTypeIfUnknown(((Function) preType).getResultType(), resolvedTypes));
+            return new Function(replaceTypeIfUnknown(((Function) preType).getInputType()),
+                    replaceTypeIfUnknown(((Function) preType).getResultType()));
         }
         else if (preType instanceof typed.ski.deep.lang.type.List) {
-            return new typed.ski.deep.lang.type.List(replaceTypeIfUnknown(((typed.ski.deep.lang.type.List) preType).getA(), resolvedTypes));
+            return new typed.ski.deep.lang.type.List(replaceTypeIfUnknown(((typed.ski.deep.lang.type.List) preType).getA()));
         }
         else {
             return preType;
@@ -178,16 +177,16 @@ public class TypeChecker {
             Function expectedFuncType = new Function(right.getRight(), uknResultType);
             typeEquations.add(Pair.of(left.getRight(), expectedFuncType));
 
-            unknownTypes = unify(typeEquations, unknownTypes);
+            unify(typeEquations);
 
-            left.getLeft().substituteUnknownTypes(unknownTypes);
-            right.getLeft().substituteUnknownTypes(unknownTypes);
+            left.getLeft().substituteUnknownTypes();
+            right.getLeft().substituteUnknownTypes();
 
-            left = Pair.of(left.getLeft(), replaceTypeIfUnknown(left.getRight(), unknownTypes));
-            right = Pair.of(right.getLeft(), replaceTypeIfUnknown(right.getRight(), unknownTypes));
+            left = Pair.of(left.getLeft(), replaceTypeIfUnknown(left.getRight()));
+            right = Pair.of(right.getLeft(), replaceTypeIfUnknown(right.getRight()));
 
             return Optional.of(Pair.of(new Application(left.getRight(), right.getRight(),
-                    left.getLeft(), right.getLeft()), replaceTypeIfUnknown(expectedFuncType.getResultType(), unknownTypes)));
+                    left.getLeft(), right.getLeft()), replaceTypeIfUnknown(expectedFuncType.getResultType())));
         }
 
         if (parseTree instanceof AnnotatedPreterm) {
@@ -199,8 +198,8 @@ public class TypeChecker {
                 List<Pair<PreType, PreType>> typeEquations = new ArrayList<>();
                 typeEquations.add(Pair.of(pair.getRight(), ((AnnotatedPreterm) parseTree).getType()));
 
-                unknownTypes = unify(typeEquations, unknownTypes);
-                pair.getLeft().substituteUnknownTypes(unknownTypes);
+                unify(typeEquations);
+                pair.getLeft().substituteUnknownTypes();
 
                 return Optional.of(Pair.of(pair.getLeft(), ((AnnotatedPreterm) parseTree).getType()));
             }
@@ -481,9 +480,7 @@ public class TypeChecker {
         return Optional.empty();
     }
 
-    private static Map<Integer, PreType> unify(List<Pair<PreType, PreType>> typeEquations, Map<Integer, PreType> unknownTypes) throws TypeCheckerException {
-        //TODO: cloning is not needed probably
-        Map<Integer, PreType> types = SerializationUtils.clone((HashMap<Integer, PreType>) unknownTypes);
+    private static void unify(List<Pair<PreType, PreType>> typeEquations) throws TypeCheckerException {
 
         if (!typeEquations.isEmpty()) {
             Pair<PreType, PreType> pair = typeEquations.remove(typeEquations.size() - 1);
@@ -521,16 +518,16 @@ public class TypeChecker {
                             preType + ", " + unknown);
                 }
 
-                types.put(unknown.getTypeId(), preType);
-                types = types.entrySet().stream()
+                unknownTypes.put(unknown.getTypeId(), preType);
+                unknownTypes = unknownTypes.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> substituteUnknownInPretypeWithType(entry.getValue(), unknown, preType)));
-                return unify(typeEquations, types);
+                unify(typeEquations);
             }
             else if (pair.getLeft() instanceof Function && pair.getRight() instanceof Function) {
                 typeEquations.add(Pair.of(((Function) pair.getLeft()).getResultType(), ((Function) pair.getRight()).getResultType()));
                 typeEquations.add(Pair.of(((Function) pair.getLeft()).getInputType(), ((Function) pair.getRight()).getInputType()));
 
-                return unify(typeEquations, types);
+                unify(typeEquations);
             }
             else if (pair.getLeft() instanceof typed.ski.deep.lang.type.List && pair.getRight() instanceof typed.ski.deep.lang.type.List) {
                 PreType type = ((typed.ski.deep.lang.type.List) pair.getLeft()).getA();
@@ -539,16 +536,14 @@ public class TypeChecker {
                 if (type != null && otherType != null) {
                     typeEquations.add(Pair.of(type, otherType));
                 }
-                return unify(typeEquations, types);
+                unify(typeEquations);
             }
             else if (areTypesEqual(pair.getLeft(), pair.getRight())) {
-                return unify(typeEquations, types);
+                unify(typeEquations);
             } else {
                 throw new TypeCheckerException("Not matching types: " + pair.getLeft() + ", " + pair.getRight());
             }
         }
-
-        return types;
     }
 
     private static Optional<Term> check(Preterm parseTree, PreType type) throws TypeCheckerException {

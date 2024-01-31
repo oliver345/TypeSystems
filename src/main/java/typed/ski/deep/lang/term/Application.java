@@ -1,8 +1,9 @@
 package typed.ski.deep.lang.term;
 
-import typed.ski.deep.lang.type.*;
-
-import java.util.Map;
+import typed.ski.deep.lang.type.Function;
+import typed.ski.deep.lang.type.List;
+import typed.ski.deep.lang.type.Nat;
+import typed.ski.deep.lang.type.PreType;
 
 import static typed.ski.deep.typechecker.TypeChecker.replaceTypeIfUnknown;
 
@@ -192,11 +193,11 @@ public class Application implements Term {
     }
 
     @Override
-    public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
-        leftType = replaceTypeIfUnknown(leftType, resolvedTypes);
-        rightType = replaceTypeIfUnknown(rightType, resolvedTypes);
-        leftTerm.substituteUnknownTypes(resolvedTypes);
-        rightTerm.substituteUnknownTypes(resolvedTypes);
+    public void substituteUnknownTypes() {
+        leftType = replaceTypeIfUnknown(leftType);
+        rightType = replaceTypeIfUnknown(rightType);
+        leftTerm.substituteUnknownTypes();
+        rightTerm.substituteUnknownTypes();
     }
 
     private boolean isItAList() {

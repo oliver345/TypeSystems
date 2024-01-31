@@ -33,6 +33,10 @@ test {
 }
 
 jar {
+    manifest {
+        attributes "Main-Class": "typed.ski.deep.SKI"
+    }
+
     from {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }

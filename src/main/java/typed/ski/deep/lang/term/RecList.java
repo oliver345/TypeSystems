@@ -2,8 +2,6 @@ package typed.ski.deep.lang.term;
 
 import typed.ski.deep.lang.type.PreType;
 
-import java.util.Map;
-
 import static typed.ski.deep.typechecker.TypeChecker.replaceTypeIfUnknown;
 
 public class RecList implements Term {
@@ -32,8 +30,8 @@ public class RecList implements Term {
 
 
     @Override
-    public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {
-        a = replaceTypeIfUnknown(a, resolvedTypes);
-        b = replaceTypeIfUnknown(b, resolvedTypes);
+    public void substituteUnknownTypes() {
+        a = replaceTypeIfUnknown(a);
+        b = replaceTypeIfUnknown(b);
     }
 }
