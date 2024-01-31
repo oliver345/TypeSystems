@@ -1,9 +1,5 @@
 package typed.ski.deep.lang.term;
 
-import typed.ski.deep.lang.type.PreType;
-
-import java.util.Map;
-
 public class Literal implements Term {
 
     private final String text;
@@ -18,5 +14,5 @@ public class Literal implements Term {
     }
 
     @Override
-    public void substituteUnknownTypes(Map<Integer, PreType> resolvedTypes) {}
+    public void substituteUnknownTypes() {}
 }
