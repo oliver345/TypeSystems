@@ -14,18 +14,14 @@ configurations {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     extraLibs group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     testImplementation 'org.assertj:assertj-core:3.6.1'
 
     configurations.implementation.extendsFrom(configurations.extraLibs)
-}
-
-//To enable java18 preview features
-tasks.withType(JavaCompile).each {
-    it.options.compilerArgs.add('--enable-preview')
 }
 
 test {
@@ -40,6 +36,15 @@ jar {
     from {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
+}
+
+tasks.register('startInREPL', JavaExec) {
+    group = "typed ski"
+    description = "Runs SKI in REPL mode"
+
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'typed.ski.deep.SKI'
+    standardInput = System.in
 }
 
 test {

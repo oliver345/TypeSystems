@@ -5,29 +5,32 @@ import org.junit.jupiter.api.Test;
 
 import java.util.function.Function;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class ShallowSKITest {
 
     @Test
     void s() {
-        Assertions.assertEquals(ShallowSKI.s().apply(ShallowSKI.k()).apply(ShallowSKI.i()).apply("Hello World"),
-                "Hello World");
+        assertEquals("Hello World",
+                ShallowSKI.s().apply(ShallowSKI.k()).apply(ShallowSKI.i()).apply("Hello World"));
     }
 
     @Test
     void k() {
-        Assertions.assertTrue(ShallowSKI.<Boolean, Boolean>k().apply(true) instanceof Function);
+        Assertions.assertInstanceOf(Function.class, ShallowSKI.<Boolean, Boolean>k().apply(true));
         Assertions.assertTrue(ShallowSKI.<Boolean, Boolean>k().apply(true).apply(false));
     }
 
     @Test
     void i() {
-        Assertions.assertEquals(ShallowSKI.i().apply(5), 5);
+        assertEquals(5, ShallowSKI.i().apply(5));
     }
 
     @Test
     void succ() {
-        Assertions.assertEquals(ShallowSKI.succ().apply(0), 1);
-        Assertions.assertEquals(ShallowSKI.succ().apply(1), 2);
+        assertEquals(1, ShallowSKI.succ().apply(0));
+        assertEquals(2, ShallowSKI.succ().apply(1));
     }
 
     @Test
@@ -38,38 +41,34 @@ class ShallowSKITest {
 
     @Test
     void ITE() {
-        Assertions.assertEquals(ShallowSKI.ITE().apply(true).apply("Hello").apply("world"), "Hello");
-        Assertions.assertEquals(ShallowSKI.ITE().apply(false).apply("Hello").apply("world"), "world");
+        assertEquals("Hello", ShallowSKI.ITE().apply(true).apply("Hello").apply("world"));
+        assertEquals("world", ShallowSKI.ITE().apply(false).apply("Hello").apply("world"));
     }
 
     @Test
     void rec() {
         //Implements isZero
-        Assertions.assertEquals(ShallowSKI.<Boolean>rec().apply(true).apply(ShallowSKI.<Function<Boolean, Boolean>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k().apply(false))).apply(0),
-                true);
-        Assertions.assertEquals(ShallowSKI.<Boolean>rec().apply(true).apply(ShallowSKI.<Function<Boolean, Boolean>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k().apply(false))).apply(5),
-                false);
+        assertEquals(true,
+                ShallowSKI.<Boolean>rec().apply(true).apply(ShallowSKI.<Function<Boolean, Boolean>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k().apply(false))).apply(0));
+        assertEquals(false,
+                ShallowSKI.<Boolean>rec().apply(true).apply(ShallowSKI.<Function<Boolean, Boolean>, Integer>k().apply(ShallowSKI.<Boolean, Boolean>k().apply(false))).apply(5));
     }
 
     @Test
     void b() {
         //B Succ I ZERO ==> 1
-        Assertions.assertEquals(ShallowSKI.<Integer, Integer, Integer>nativeB().apply(ShallowSKI.<Integer, Integer>succ()).apply(ShallowSKI.<Integer>i()).apply(0), 1);
-        Assertions.assertEquals(ShallowSKI.<Integer, Integer, Integer>b().apply(ShallowSKI.<Integer, Integer>succ()).apply(ShallowSKI.<Integer>i()).apply(0), 1);
+        assertEquals(1, ShallowSKI.<Integer, Integer, Integer>nativeB().apply(ShallowSKI.<Integer, Integer>succ()).apply(ShallowSKI.<Integer>i()).apply(0));
+        assertEquals(1, ShallowSKI.<Integer, Integer, Integer>b().apply(ShallowSKI.<Integer, Integer>succ()).apply(ShallowSKI.<Integer>i()).apply(0));
     }
 
     @Test
     void c() {
         //C I 0 Succ ==> 1
-        System.out.println(ShallowSKI.<Function<Integer, Integer>, Integer, Integer>nativeC().apply(ShallowSKI.<Function<Integer, Integer>>i()).apply(0).apply(ShallowSKI.succ()));
+        assertEquals(1, ShallowSKI.<Function<Integer, Integer>, Integer, Integer>nativeC().apply(ShallowSKI.<Function<Integer, Integer>>i()).apply(0).apply(ShallowSKI.succ()));
     }
 
     @Test
     void LE() {
-        System.out.println("Testing LE");
-        System.out.println("35, 25");
-        boolean result = ShallowSKI.LE.apply(35).apply(25);
-        System.out.println(result);
+        assertThat(ShallowSKI.LE.apply(35).apply(25)).isFalse();
     }
-
 }

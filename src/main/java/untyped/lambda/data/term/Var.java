@@ -2,7 +2,6 @@ package untyped.lambda.data.term;
 
 public class Var implements Term {
 
-    //Todo: remove
     private Lam binder;
 
     private final char name;

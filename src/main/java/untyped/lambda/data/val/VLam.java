@@ -13,6 +13,4 @@ public class VLam implements Val {
     public Closure getClosure() {
         return closure;
     }
-
-    //Todo: toString
 }

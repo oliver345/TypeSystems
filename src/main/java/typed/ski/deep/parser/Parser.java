@@ -10,8 +10,6 @@ import java.util.stream.Stream;
 
 public class Parser {
 
-    private static final String TEXT_IN_BRACKETS_PATTERN = "\\([^)]*\\)";
-
     public static Preterm createParseTree(String input, Map<String, Preterm> definitions) throws ParserException {
         List<Preterm> preterms = new ArrayList<>();
 
@@ -326,7 +324,7 @@ public class Parser {
         else if (input.contains("->")) {
             //Remove outer brackets
             if (input.charAt(0) == '(' && input.charAt(input.length() - 1) == ')'
-                    && areParenthesesValid(input.substring(1, input.length() - 1), true)) {
+                    && areParenthesesValid(input.substring(1, input.length() - 1))) {
                 input = input.substring(1, input.length() -1);
             }
 
@@ -359,17 +357,9 @@ public class Parser {
         throw new ParserException("\"" + input + "\" can not be parsed to any type");
     }
 
-    private static boolean areParenthesesValid(String input, boolean roundParentheses) {
-        char opening, closing;
-        if (roundParentheses) {
-            opening = '(';
-            closing = ')';
-        }
-        else {
-            opening = '[';
-            closing = ']';
-        }
-
+    private static boolean areParenthesesValid(String input) {
+        char opening = '(';
+        char closing = ')';
         int bracketOpened = 0;
         int bracketClosed = 0;
         int index = 0;
