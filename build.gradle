@@ -37,6 +37,15 @@ jar {
     }
 }
 
+tasks.register('startInREPL', JavaExec) {
+    group = "typed ski"
+    description = "Runs SKI in REPL mode"
+
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'typed.ski.deep.SKI'
+    standardInput = System.in
+}
+
 test {
     useJUnitPlatform()
 }

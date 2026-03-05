@@ -18,6 +18,9 @@
 ## Starting the application:
 By the main method in typed.ski.deep.SKI.java: starts the application in REPL mode
 
+Or run
+./gradlew startInREPL
+
 Starting from a built JAR: java -jar <jar-file-path-and-name>
 
 Starting typed.ski.deep.SKI with the -eval=<input-file-path-and-name>
