@@ -1,4 +1,4 @@
-// S -> S
+        // S -> S
         System.out.println(SKI.eval(SKI.parseFromString("S")));
 
         // K -> K

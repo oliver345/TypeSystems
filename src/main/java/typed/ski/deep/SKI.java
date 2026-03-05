@@ -19,30 +19,6 @@ import java.util.stream.Stream;
 
 public class SKI {
 
-    //B=S (K S) K;C=S (S (K B) S) (K K);toggle print style
-
-    public static final String LE = "Rec (K True) (K (S (K (Rec False))(S (K K))))";
-
-    public static final String B = "S (K S) K";
-
-    public static final String C = "S (S (K B) S) (K K)";
-
-    public static final String INSERT = "S (B RecList (C Cons [])) (C (B S (B (B C) (B (B (B B)) (S (B S (B (B B) (B (B ITE) LE))) (C (B B (B B Cons)) Cons))))) Cons)";
-
-    public static final String INSERTION_SORT = "RecList [] (S (K K) INSERT)";
-
-    public static final String ADD = "C Rec (K Succ)";
-
-    public static final String MUL = "B (Rec ZERO) ((B K) ADD)";
-
-    public static final String FAC = "((Rec (Succ ZERO)) ((B MUL) Succ))";
-
-    public static final String CASE = "C (B B Rec) (B K)";
-
-    public static final String ITER = "C (B B Rec) K";
-
-    public static final String LE_ITER = "ITER (K True) (CASE False)";
-
     private static final List<String> reservedTokens = List.of("S", "K", "I", "False", "True", "ITE", "Rec", "Succ",
             "ZERO", "Bool", "Nat", "Str", "RecList", "Cons", "quit", "List");
 
@@ -68,10 +44,6 @@ public class SKI {
                     }
                 },
                 SKI::runInREPL);
-    }
-
-    public static void executeCode(String input) {
-        executeCode(input, null, null);
     }
 
     public static void executeCode(String input, Map<String, Preterm> definitions, Map<String, String> shallowDefinitions) {
@@ -147,7 +119,6 @@ public class SKI {
             if (shallowEnabled) {
                 System.out.println("--- Shallow evaluated ---");
                 System.out.println(ShallowParser.parseAndEvalWithShallow(input, shallowDefinitions));
-                //TODO: handle general exception for shallow
                 System.out.println("--- --- --- ---");
             }
             //Parse
@@ -163,10 +134,8 @@ public class SKI {
         catch (TypeCheckerException typeCheckerException) {
             handleException(typeCheckerException, "Type check failed on \"" + input + "\"");
         }
-        //TODO: Catch general exceptions! Deep-shallow
-        //Handle shallow exception properly
-        catch (Exception tmpException) {
-            handleException(tmpException, "General exception in \"" + input + "\"");
+        catch (Exception generalException) {
+            handleException(generalException, "Unexpected exception: " + generalException.getMessage() + ". \nInput: \"" + input + "\"");
         }
 
         return Optional.empty();

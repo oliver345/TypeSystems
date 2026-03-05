@@ -12,4 +12,4 @@ LE_ITER=ITER (K True) (CASE False);
 AND=C (B C ITE) False;
 OR=C ITE True;
 isZERO=Rec True (K (K False));
-listSize=RecList ZERO (B (K (K Succ)) I);  <- ha az input [], meg kell adni RecList type paramétereit, A: lista type param, B: zero elem
+listSize=RecList ZERO (B (K (K Succ)) I);  <- ha az input [], meg kell adni RecList type paramétereit, A: lista type param, B: zero elem; De itt a definíció tartalmazza a zero elem típusát, ezért csak a lista típusát kell megadni pl.: []:List{Nat}

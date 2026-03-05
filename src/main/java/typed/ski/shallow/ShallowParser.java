@@ -9,8 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ShallowParser {
-    
-    //TODO: definitions map should be removed from the parameters, since it is now supported here
+
     public static Object parseAndEvalWithShallow(String input, Map<String, String> definitions) throws ParserException {
         List<Object> terms = new ArrayList<>();
 
@@ -60,7 +59,6 @@ public class ShallowParser {
                 }
                 else {
                     //It is a list in an AnnotatedPreterm
-                    PreType annotationType = parseType(input.substring(closingPos + 2, closingPos + 2 + annotationLength));
                     firstNotProcessedPos = closingPos + 2 + annotationLength;
                     pos = closingPos + 2 + annotationLength;
                 }
@@ -76,7 +74,7 @@ public class ShallowParser {
 
         return terms.size() == 1 ? terms.get(0) : terms.stream()
                 .reduce((leftTerm, rightTerm) -> ((java.util.function.Function) leftTerm).apply(rightTerm))
-                .orElseThrow(() -> new ParserException("No preterm found after parsing"));
+                .orElseThrow(() -> new ParserException("No preterm found after shallow parsing"));
     }
 
     private static boolean isInAnnotatedTerm(String input, int posOfOpeningBracket) throws ParserException {
@@ -285,7 +283,7 @@ public class ShallowParser {
         else if (input.contains("->")) {
             //Remove outer brackets
             if (input.charAt(0) == '(' && input.charAt(input.length() - 1) == ')'
-                    && areParenthesesValid(input.substring(1, input.length() - 1), true)) {
+                    && areParenthesesValid(input.substring(1, input.length() - 1))) {
                 input = input.substring(1, input.length() -1);
             }
 
@@ -318,17 +316,9 @@ public class ShallowParser {
         throw new ParserException("\"" + input + "\" can not be parsed to any type");
     }
 
-    private static boolean areParenthesesValid(String input, boolean roundParentheses) {
-        char opening, closing;
-        if (roundParentheses) {
-            opening = '(';
-            closing = ')';
-        }
-        else {
-            opening = '[';
-            closing = ']';
-        }
-
+    private static boolean areParenthesesValid(String input) {
+        char opening = '(';
+        char closing = ')';
         int bracketOpened = 0;
         int bracketClosed = 0;
         int index = 0;
